@@ -1,0 +1,26 @@
+# waf projects
+waf-*
+waf3-*
+.waf-*
+.waf3-*
+.lock-*
+build
+resolve_symlinks
+resolved_dependencies
+pytest_environment_*
+
+# Python
+*.pyc
+.cache
+.tox
+pytest_environment_*
+pytest_temp
+virtualenv-*
+dist
+pytest_vagrant.egg-info
+pip_packages
+
+.pytest_cache/
+.vagrant/
+.vscode/
+build_current
