@@ -28,7 +28,7 @@ Example::
 
     def test_this_function(vagrant):
         if vagrant.status.not_created:
-            vagrant.uo()
+            vagrant.up()
 
 The vagrant argument is an instance of Vagrant and represents the vagrant
 environment on the machine running the test code.

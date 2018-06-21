@@ -67,7 +67,7 @@ setup(
         'Topic :: Software Development :: Testing',
     ],
     keywords=('pytest py.test '
-              'testing unit tests plugin'),
+              'testing unit tests plugin vagrant'),
     packages=find_packages(where='src', exclude=['test']),
     package_dir={"": "src"},
     install_requires=['pytest', 'paramiko'],

@@ -97,7 +97,7 @@ def upload(bld):
     venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
 
     with venv:
-        venv.pip_install('twine')
+        venv.pip_install(['twine'])
 
         wheel = _find_wheel(ctx=bld)
 
@@ -105,7 +105,6 @@ def upload(bld):
 
 
 def _pytest(bld):
-
     # Create the virtualenv in the build folder to make sure we run
     # isolated from the sources
     venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
@@ -146,4 +145,8 @@ def _pytest(bld):
         if bld.options.verbose:
             command += " --capture=no"
 
-        venv.run(command)
+        result = venv.run(command)
+        combined_stdout = u'Running: {0}\n'.format(' '.join(command))
+        combined_stdout += result[0]
+
+        Logs.debug(u"wr: %r", combined_stdout)

@@ -2,8 +2,7 @@ import os
 
 def walk_up(bottom):
     """
-    mimic os.walk, but walk 'up'
-    instead of down the directory tree
+    Mimic os.walk, but walk 'up' instead of down the directory tree.
     """
     while True:
         bottom = os.path.realpath(bottom)

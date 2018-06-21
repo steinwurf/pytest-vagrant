@@ -25,18 +25,21 @@ class SSH(object):
         self.sftp = None
 
     def open(self):
+        """Open the ssh connection."""
         self.client.connect(
             hostname=self.hostname,
             port=self.port,
             username=self.username,
             key_filename=self.key_filename)
-        self.sftp = self.client.open_sftp()
 
     def close(self):
-        self.sftp.close()
+        """Close the ssh connection."""
+        if self.sftp:
+            self.sftp.close()
         self.client.close()
 
     def run(self, cmd):
+        """Run command on remote."""
         _, stdout, stderr = self.client.exec_command(cmd)
         status_code = stdout.channel.recv_exit_status()
         stdout = ''.join(stdout.readlines())
@@ -56,6 +59,20 @@ class SSH(object):
         return stdout, stderr
 
     def put(self, *args):
+        """Transfer files from this machine to the remote.
+        The locations of the files should be given in pairs.
+
+        Example:
+
+            ssh.put(
+                '/local/file1', '/remote/location1',
+                '/local/file2', '/remote/location2',
+                # ...
+                '/local/fileN', '/remote/locationN')
+        """
+        if self.sftp is None:
+            self.sftp = self.client.open_sftp()
+
         for i in range(0, len(args), 2):
             localpath, remotepath = args[i:i + 2]
             localpath = os.path.abspath(localpath)
@@ -65,6 +82,20 @@ class SSH(object):
             self.sftp.chmod(remotepath, statinfo.st_mode)
 
     def get(self, *args):
+        """Transfer files from the remote to this machine.
+        The locations of the files should be given in pairs.
+
+        Example:
+
+            ssh.get(
+                '/remote/file1', '/local/location1',,
+                '/remote/file2', '/local/location2',,
+                # ...
+                '/remote/fileN', '/local/locationN')
+        """
+        if self.sftp is None:
+            self.sftp = self.client.open_sftp()
+
         for i in range(0, len(args), 2):
             remotepath, localpath = args[i:i + 2]
             localpath = os.path.abspath(localpath)
@@ -74,12 +105,25 @@ class SSH(object):
             os.chmod(localpath, statinfo.st_mode)
 
     def rm(self, *args):
+        """Removes files from the remote.
+        Multiple files can be given.
+
+        Example:
+
+            ssh.remove(
+                '/remote/file1',
+                '/remote/file2',
+                # ...
+                '/remote/fileN')
+        """
         for remotepath in args:
             self.sftp.remove(remotepath)
 
     def __enter__(self):
+        """Use SSH with the with statement."""
         self.open()
         return self
 
     def __exit__(self, type, value, traceback):
+        """Use SSH with the with statement."""
         self.close()

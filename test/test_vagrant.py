@@ -17,7 +17,7 @@ def test_status(vagrant):
 
 def test_port(vagrant):
     assert len(vagrant.port()) != 0
-
+    assert False
 def test_ssh(vagrant):
     with vagrant.ssh() as ssh:
         out, _ = ssh.run('ls')
