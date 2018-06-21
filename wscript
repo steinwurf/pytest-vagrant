@@ -44,17 +44,15 @@ def options(opt):
         '--pytest_basetemp', default='pytest_temp',
         help='Set the basetemp folder where pytest executes the tests')
 
+def configure(conf):
 
-def _create_virtualenv(ctx, cwd):
-    # Make sure the virtualenv Python module is in path
-    venv_path = ctx.dependency_path('virtualenv')
+    # Check if we have vagrant installed, needed to run the mininet
+    # tests
+    conf.find_program('vagrant', mandatory=False)
 
-    env = os.environ.copy()
-    env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
-
-    from waflib.extras.wurf.virtualenv import VirtualEnv
-    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx, overwrite=False)
-
+    # Check if we have VirtualBox installed, needed to run the mininet
+    # tests
+    conf.find_program('VBoxManage', mandatory=False)
 
 def build(bld):
 
@@ -77,6 +75,15 @@ def build(bld):
     if bld.options.run_tests:
         _pytest(bld=bld)
 
+def _create_virtualenv(ctx, cwd):
+    # Make sure the virtualenv Python module is in path
+    venv_path = ctx.dependency_path('virtualenv')
+
+    env = os.environ.copy()
+    env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
+
+    from waflib.extras.wurf.virtualenv import VirtualEnv
+    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx, overwrite=False)
 
 def _find_wheel(ctx):
     """ Find the .whl file in the dist folder. """
@@ -105,6 +112,13 @@ def upload(bld):
 
 
 def _pytest(bld):
+
+    if not bld.env.VAGRANT:
+        bld.fatal("Cannot run pytest-vagrant tests without vagrant installed.")
+
+    if not bld.env.VBOXMANAGE:
+        bld.fatal("Cannot run pytest-vagrant tests without VirtualBox installed.")
+
     # Create the virtualenv in the build folder to make sure we run
     # isolated from the sources
     venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
