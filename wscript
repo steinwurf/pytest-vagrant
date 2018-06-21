@@ -145,8 +145,4 @@ def _pytest(bld):
         if bld.options.verbose:
             command += " --capture=no"
 
-        result = venv.run(command)
-        combined_stdout = u'Running: {0}\n'.format(' '.join(command))
-        combined_stdout += result[0]
-
-        Logs.debug(u"wr: %r", combined_stdout)
+        venv.run(command)

@@ -104,20 +104,25 @@ class SSH(object):
             statinfo = self.sftp.stat(remotepath)
             os.chmod(localpath, statinfo.st_mode)
 
-    def rm(self, *args):
+    def rm(self, remote_files, force=False):
         """Removes files from the remote.
-        Multiple files can be given.
 
         Example:
 
-            ssh.remove(
-                '/remote/file1',
-                '/remote/file2',
-                # ...
-                '/remote/fileN')
+            ssh.remove(['/remote/file1', '/remote/file2'], fource)
         """
-        for remotepath in args:
-            self.sftp.remove(remotepath)
+        if self.sftp is None:
+            self.sftp = self.client.open_sftp()
+
+        if isinstance(remote_files, basestring):
+            remote_files = [remote_files]
+
+        for remote_file in remote_files:
+            try:
+                self.sftp.remove(remote_file)
+            except IOError as e:
+                if not force:
+                    raise e
 
     def __enter__(self):
         """Use SSH with the with statement."""

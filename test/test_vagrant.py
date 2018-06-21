@@ -17,15 +17,28 @@ def test_status(vagrant):
 
 def test_port(vagrant):
     assert len(vagrant.port()) != 0
-    assert False
+
 def test_ssh(vagrant):
     with vagrant.ssh() as ssh:
+        ssh.rm('hello', force=True)
         out, _ = ssh.run('ls')
         assert "hello" not in out
         ssh.run('touch hello')
         out, _ = ssh.run('ls')
         assert "hello" in out
-        ssh.run('rm hello')
+        ssh.rm('hello')
         out, _ = ssh.run('ls')
         assert "hello" not in out
+        ssh.rm('waf', force=True)
+        ssh.put('../waf', 'waf')
+        out, _ = ssh.run('python waf --version')
+        assert "waf" in out
+        ssh.rm('waf')
 
+        ssh.rm('woop_file', force=True)
+        ssh.run('echo woop >> woop_file')
+        ssh.get('woop_file', 'woop_file')
+        with open('woop_file', 'r') as f:
+            woop_local = f.read()
+            woop_remote, _ = ssh.run('cat woop_file')
+            assert woop_local == woop_remote
