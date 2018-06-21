@@ -1,23 +1,25 @@
 import os
 
+def test_vagrantfile(vagrant):
+    assert vagrant.vagrant_file() is not None
+
 def test_version(vagrant):
     assert vagrant.version() is not None
 
 def test_status(vagrant):
-    status_output = """default not created (virtualbox)"""
-    assert str(vagrant.status) == "running"
-    assert vagrant.status.running == True
-    assert vagrant.status.not_created == False
-    assert vagrant.status.poweroff == False
-    assert vagrant.status.aborted == False
-    assert vagrant.status.saved == False
+    status = vagrant.status
+    assert str(status) == "running"
+    assert status.running == True
+    assert status.not_created == False
+    assert status.poweroff == False
+    assert status.aborted == False
+    assert status.saved == False
 
 def test_port(vagrant):
     assert len(vagrant.port()) != 0
 
 def test_ssh(vagrant):
-    ssh = vagrant.ssh()
-    with ssh:
+    with vagrant.ssh() as ssh:
         out, _ = ssh.run('ls')
         assert "hello" not in out
         ssh.run('touch hello')

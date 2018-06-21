@@ -7,7 +7,7 @@ import re
 from paramiko import SSHClient, AutoAddPolicy
 
 class SSH(object):
-    """
+    """An SSH Connection
     """
     def __init__(self, ssh_config):
         self.hostname = re.search(r'HostName (.*)', ssh_config).group(1)
@@ -41,9 +41,11 @@ class SSH(object):
         status_code = stdout.channel.recv_exit_status()
         stdout = ''.join(stdout.readlines())
         stderr = ''.join(stderr.readlines())
-
-        print("stdout: %s" % stdout)
-        print("stderr: %s" % stderr, file=sys.stderr)
+        print('\nrunning \'{cmd}\''.format(cmd=cmd))
+        if stdout:
+            print("stdout:\n%s" % stdout)
+        if stderr:
+            print("stderr:\n%s" % stderr, file=sys.stderr)
         if status_code != 0:
             raise RuntimeError('Command "{}" returned {}.\nstdout: {}\nstderr:{}\n'.format(
                 cmd,

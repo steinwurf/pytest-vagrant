@@ -6,9 +6,9 @@ import py
 
 from ssh import SSH
 from status import Status
+from utils import walk_up
 
-
-@pytest.fixture
+@pytest.fixture(scope='session')
 def vagrant():
     """ Creates the py.test fixture to make it usable withing the unit tests.
     See the Vagrant class for more information.
@@ -25,12 +25,21 @@ class Vagrant(object):
             print("Unable to validate vagrant file, are you sure it exists?")
             raise e
 
-        if self.status.not_created:
+        if self.status.not_created or self.status.poweroff:
             print "run up"
             self.up()
-        elif not self.status.running:
+        elif self.status.saved:
             print "run resume"
             self.resume()
+
+        if not self.status.running:
+            raise RuntimeError("Dispite our efforts, the vagrant machine not running")
+
+    def vagrant_file(self):
+        for i in walk_up(os.curdir):
+            directory, _, nondirs = i
+            if 'Vagrantfile' in nondirs:
+                return os.path.join(directory, 'Vagrantfile')
 
     @property
     def status(self):
@@ -63,17 +72,13 @@ class Vagrant(object):
             raise RuntimeError("Vagrant machine not created")
         subprocess.check_output('vagrant reload', shell=True)
 
-    def resume(self):
-        if self.status.not_created:
-            raise RuntimeError("Vagrant machine not created")
-        subprocess.check_output('vagrant resume', shell=True)
-
     def ssh_config(self):
         if self.status.not_created:
             raise RuntimeError("Vagrant machine not created")
         if not self.status.running:
             raise RuntimeError("Vagrant machine not running")
-        subprocess.check_output('vagrant ssh-config', shell=True)
+        out = subprocess.check_output('vagrant ssh-config', shell=True)
+        return out
 
     def destroy(self):
         subprocess.check_output('vagrant destroy', shell=True)
@@ -81,11 +86,16 @@ class Vagrant(object):
     def halt(self):
         subprocess.check_output('vagrant halt', shell=True)
 
+    def up(self):
+        subprocess.check_output('vagrant up', shell=True)
+
     def suspend(self):
         subprocess.check_output('vagrant suspend', shell=True)
 
-    def up(self):
-        subprocess.check_output('vagrant up', shell=True)
+    def resume(self):
+        if self.status.saved:
+            raise RuntimeError("Vagrant machine not suspended (saved)")
+        subprocess.check_output('vagrant resume', shell=True)
 
     def version(self):
         out = subprocess.check_output('vagrant version', shell=True)
