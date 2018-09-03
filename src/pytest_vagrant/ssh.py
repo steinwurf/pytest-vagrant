@@ -61,7 +61,7 @@ class SSH(object):
             ))
         return stdout, stderr
 
-    def put(self, *args):
+    def put(self, localpath, remotepath):
         """Transfer files from this machine to the remote.
         The locations of the files should be given in pairs.
 
@@ -73,16 +73,18 @@ class SSH(object):
                 # ...
                 '/local/fileN', '/remote/locationN')
         """
+        localpath = os.path.abspath(os.path.expanduser(localpath))
+
+        if not os.path.isfile(localpath):
+            raise RuntimeError("Not a valid file {}".format(localpath))
+
         if self.sftp is None:
             self.sftp = self.client.open_sftp()
 
-        for i in range(0, len(args), 2):
-            localpath, remotepath = args[i:i + 2]
-            localpath = os.path.abspath(localpath)
-            self.sftp.put(localpath=localpath, remotepath=remotepath)
+        self.sftp.put(localpath=localpath, remotepath=remotepath)
 
-            statinfo = os.stat(localpath)
-            self.sftp.chmod(path=remotepath, mode=statinfo.st_mode)
+        statinfo = os.stat(localpath)
+        self.sftp.chmod(path=remotepath, mode=statinfo.st_mode)
 
     def get(self, *args):
         """Transfer files from the remote to this machine.

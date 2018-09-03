@@ -50,6 +50,17 @@ class Vagrant(object):
             raise RuntimeError(
                 "Invalid vagrantfile path {}.".format(vagrantfile))
 
+        # The command 'vagrant validate' was not introduced until vagrant
+        # version 1.9.4. https://www.hashicorp.com/blog/vagrant-1-9-4
+        #
+        # We should check for the version.
+        version = subprocess.check_output(
+            'vagrant --version', shell=True, cwd=self.cwd)
+
+        if version < "1.9.4":
+            raise RuntimeError("Vagrant version above or equal to 1.9.4 "
+                               "required. You have {}".format(version))
+
         try:
             subprocess.check_output(
                 'vagrant validate', shell=True, cwd=self.cwd)

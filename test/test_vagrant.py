@@ -35,10 +35,10 @@ def test_ssh(vagrant):
         out, _ = ssh.run('ls')
         assert "hello" not in out
         ssh.rm('waf', force=True)
-        ssh.put('../waf', 'subdir/waf')
-        out, _ = ssh.run('python subdir/waf --version')
+        ssh.put('../waf', 'waf')
+        out, _ = ssh.run('python waf --version')
         assert "waf" in out
-        ssh.rm('subdir/waf')
+        ssh.rm('waf')
 
         ssh.rm('woop_file', force=True)
         ssh.run('echo woop >> woop_file')
