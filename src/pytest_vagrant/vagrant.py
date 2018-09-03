@@ -22,7 +22,7 @@ def vagrant(request):
 
 def pytest_addoption(parser):
     parser.addoption(
-        '--vagrantfile', action='store', default='',
+        '--vagrantfile', action='store', default=None,
         help='Specify the vagrantfile to use')
 
 
@@ -40,10 +40,15 @@ class Vagrant(object):
 
     def __init__(self, vagrantfile=None):
 
-        if vagrantfile:
-            self.cwd = os.path.basename(vagrantfile)
-        else:
+        if vagrantfile is None:
             self.cwd = os.getcwd()
+        elif os.path.isfile(vagrantfile):
+            self.cwd = os.path.basename(vagrantfile)
+        elif os.path.isdir(vagrantfile):
+            self.cwd = vagrantfile
+        else:
+            raise RuntimeError(
+                "Invalid vagrantfile path {}.".format(vagrantfile))
 
         try:
             subprocess.check_output(
