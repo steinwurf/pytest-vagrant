@@ -35,7 +35,7 @@ def test_ssh(vagrant):
         out, _ = ssh.run('ls')
         assert "hello" not in out
         ssh.rm('waf', force=True)
-        ssh.put('../waf', 'waf')
+        ssh.put(localpath='../waf', remotepath='waf')
         out, _ = ssh.run('python waf --version')
         assert "waf" in out
         ssh.rm('waf')
