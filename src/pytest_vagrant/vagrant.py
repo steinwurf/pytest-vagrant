@@ -8,12 +8,14 @@ from ssh import SSH
 from status import Status
 from utils import walk_up
 
+
 @pytest.fixture(scope='session')
 def vagrant():
     """ Creates the py.test fixture to make it usable withing the unit tests.
     See the Vagrant class for more information.
     """
     return Vagrant()
+
 
 class Vagrant(object):
     """ Vagrant provides access to a virtual machine through vagrant.
@@ -26,11 +28,14 @@ class Vagrant(object):
                 stdout, stderr = ssh.run('./test/executable')
                 assert 'hello world' in stdout
     """
+
     def __init__(self):
         try:
-            subprocess.check_output('vagrant validate', shell=True)
+            subprocess.check_output(
+                'vagrant validate', shell=True, cwd=os.getcwd())
         except subprocess.CalledProcessError as e:
-            print("Unable to validate vagrant file, are you sure it exists?")
+            print("Unable to validate vagrant file, are you sure it exists? "
+                  "Running vagrant validate in {}".format(os.getcwd()))
             raise e
 
         if self.status.not_created or self.status.poweroff:
@@ -41,7 +46,8 @@ class Vagrant(object):
             self.resume()
 
         if not self.status.running:
-            raise RuntimeError("Dispite our efforts, the vagrant machine not running")
+            raise RuntimeError(
+                "Dispite our efforts, the vagrant machine not running")
 
     def vagrant_file(self):
         """Return the Vagrantfile used for the vagrant machine."""
