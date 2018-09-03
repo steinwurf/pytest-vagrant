@@ -6,14 +6,17 @@ import re
 
 from paramiko import SSHClient, AutoAddPolicy
 
+
 class SSH(object):
     """An SSH Connection
     """
+
     def __init__(self, ssh_config):
         self.hostname = re.search(r'HostName (.*)', ssh_config).group(1)
         self.username = re.search(r'User (.*)', ssh_config).group(1)
         self.port = re.search(r'Port (.*)', ssh_config).group(1)
-        self.key_filename = re.search(r'IdentityFile (.*)', ssh_config).group(1)
+        self.key_filename = re.search(
+            r'IdentityFile (.*)', ssh_config).group(1)
 
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
@@ -76,10 +79,10 @@ class SSH(object):
         for i in range(0, len(args), 2):
             localpath, remotepath = args[i:i + 2]
             localpath = os.path.abspath(localpath)
-            self.sftp.put(localpath, remotepath)
+            self.sftp.put(localpath=localpath, remotepath=remotepath)
 
             statinfo = os.stat(localpath)
-            self.sftp.chmod(remotepath, statinfo.st_mode)
+            self.sftp.chmod(path=remotepath, mode=statinfo.st_mode)
 
     def get(self, *args):
         """Transfer files from the remote to this machine.

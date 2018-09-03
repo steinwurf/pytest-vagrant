@@ -1,10 +1,13 @@
 import os
 
+
 def test_vagrantfile(vagrant):
     assert vagrant.vagrant_file() is not None
 
+
 def test_version(vagrant):
     assert vagrant.version() is not None
+
 
 def test_status(vagrant):
     status = vagrant.status
@@ -15,8 +18,10 @@ def test_status(vagrant):
     assert status.aborted == False
     assert status.saved == False
 
+
 def test_port(vagrant):
     assert len(vagrant.port()) != 0
+
 
 def test_ssh(vagrant):
     with vagrant.ssh() as ssh:
@@ -30,10 +35,10 @@ def test_ssh(vagrant):
         out, _ = ssh.run('ls')
         assert "hello" not in out
         ssh.rm('waf', force=True)
-        ssh.put('../waf', 'waf')
-        out, _ = ssh.run('python waf --version')
+        ssh.put('../waf', 'subdir/waf')
+        out, _ = ssh.run('python subdir/waf --version')
         assert "waf" in out
-        ssh.rm('waf')
+        ssh.rm('subdir/waf')
 
         ssh.rm('woop_file', force=True)
         ssh.run('echo woop >> woop_file')
