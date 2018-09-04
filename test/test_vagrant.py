@@ -35,6 +35,28 @@ def test_ssh(vagrant):
         ssh.run('python waf --version', cwd='testdir')
         assert ssh.isdir('testdir') == True
 
+
+def test_mkdir(vagrant):
+
+    with vagrant.ssh() as ssh:
+
+        if ssh.isdir('testdir'):
+            ssh.rmdir('testdir')
+
+        ssh.mkdir(path='testdir/hello/dir2')
+
+        assert ssh.isdir(path='testdir/hello/dir2')
+
+        ssh.mkdir(path='dir3', cwd='testdir/hello/dir2')
+
+        assert ssh.isdir(path='testdir/hello/dir2/dir3')
+
+        ssh.rmdir('testdir')
+
+        assert ssh.isdir(path='testdir/hello/dir2/dir3') == False
+        assert ssh.isdir(path='testdir/hello/dir2') == False
+        assert ssh.isdir(path='testdir') == False
+
     # ssh.rm('hello', force=True)
     # out, _ = ssh.run('ls')
     # assert "hello" not in out

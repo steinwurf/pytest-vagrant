@@ -127,8 +127,8 @@ class SSH(object):
         self.sftp.chdir(None)
         return is_directory
 
-    def mkdir(self, path, mode=551):
-        self.sftp.mkdir(path=path, mode=mode)
+    def mkdir(self, path, cwd=None):
+        self.run(cmd='mkdir -p %s' % path, cwd=cwd)
 
     def rmdir(self, path, cwd=None):
         """ Remove the directory """
