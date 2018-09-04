@@ -58,7 +58,7 @@ def test_mkdir(vagrant):
         assert ssh.isdir(path='testdir') == False
 
 
-def test_get(vagrant):
+def test_isfile_isdir(vagrant):
     with vagrant.ssh() as ssh:
 
         if ssh.isdir('testdir'):
@@ -69,6 +69,26 @@ def test_get(vagrant):
 
         assert ssh.isfile(path='testdir/hello') == True
         assert ssh.isfile(path='testdir') == False
+
+
+def test_get(testdirectory, vagrant):
+    with vagrant.ssh() as ssh:
+
+        if ssh.isdir('testdir'):
+            ssh.rmdir('testdir')
+
+        ssh.mkdir(path='testdir')
+        ssh.run(cmd='touch hello', cwd='testdir')
+
+        assert ssh.isfile(path='testdir/hello') == True
+
+        local_path = os.path.join(testdirectory.path(), 'hello')
+
+        assert not os.path.isfile(local_path)
+
+        ssh.get(local_path, remote_path='testdir/hello')
+
+        assert os.path.isfile(local_path)
 
     # ssh.rm('hello', force=True)
     # out, _ = ssh.run('ls')

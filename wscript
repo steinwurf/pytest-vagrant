@@ -107,7 +107,7 @@ def _pytest(bld):
     venv = bld.create_virtualenv(cwd=bld.bldnode.abspath())
     with venv:
         # with venv:
-        venv.pip_install(['pytest', 'paramiko'])
+        venv.pip_install(['pytest', 'pytest_testdirectory', 'paramiko'])
 
         # Install the pytest-vagrant plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)

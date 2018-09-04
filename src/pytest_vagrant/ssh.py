@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 import re
+import stat
 
 from paramiko import SSHClient, AutoAddPolicy
 
@@ -117,28 +118,24 @@ class SSH(object):
 
     def isdir(self, path):
         """ Return true if path is a directory """
-        is_directory = True
-
         try:
-            self.sftp.chdir(path)
+            mode = self.sftp.stat(path=path).st_mode
         except IOError:
-            is_directory = False
-        # except SFTPError as e:
-        #    if
+            return False
 
-        self.sftp.chdir(None)
-        return is_directory
+        return stat.S_ISDIR(mode)
 
     def isfile(self, path):
         """ Return true if path is a file """
         try:
-            self.sftp.stat(path=path)
+            mode = self.sftp.stat(path=path).st_mode
         except IOError:
             return False
 
-        return not self.isdir(path=path)
+        return stat.S_ISREG(mode)
 
     def mkdir(self, path, cwd=None):
+        """ Create a new directory """
         self.run(cmd='mkdir -p %s' % path, cwd=cwd)
 
     def rmdir(self, path, cwd=None):
@@ -149,26 +146,20 @@ class SSH(object):
 
         self.run(cmd='rm -rf %s' % path, cwd=cwd)
 
-    def get(self, *args):
+    def get(self, local_path, remote_path):
         """Transfer files from the remote to this machine.
         The locations of the files should be given in pairs.
 
         Example:
 
-            ssh.get(
-                '/remote/file1', '/local/location1',,
-                '/remote/file2', '/local/location2',,
-                # ...
-                '/remote/fileN', '/local/locationN')
+            ssh.get(local_path='/local/file1',
+                    remote_path='/remote/location1')
         """
 
-        for i in range(0, len(args), 2):
-            remotepath, localpath = args[i:i + 2]
-            localpath = os.path.abspath(localpath)
-            self.sftp.get(remotepath, localpath)
+        self.sftp.get(remotepath=remote_path, localpath=local_path)
 
-            statinfo = self.sftp.stat(remotepath)
-            os.chmod(localpath, statinfo.st_mode)
+        statinfo = self.sftp.stat(remote_path)
+        os.chmod(local_path, statinfo.st_mode)
 
     def rm(self, remote_files, force=False):
         """Removes files from the remote.
