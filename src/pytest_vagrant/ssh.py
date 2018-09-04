@@ -123,9 +123,20 @@ class SSH(object):
             self.sftp.chdir(path)
         except IOError:
             is_directory = False
+        # except SFTPError as e:
+        #    if
 
         self.sftp.chdir(None)
         return is_directory
+
+    def isfile(self, path):
+        """ Return true if path is a file """
+        try:
+            self.sftp.stat(path=path)
+        except IOError:
+            return False
+
+        return not self.isdir(path=path)
 
     def mkdir(self, path, cwd=None):
         self.run(cmd='mkdir -p %s' % path, cwd=cwd)
