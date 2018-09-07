@@ -31,7 +31,7 @@ class SSH(object):
         self._sftp = None
 
     def open(self):
-        """Open the ssh connection."""
+        """Open the SSH connection."""
         self.client.connect(
             hostname=self.hostname,
             port=self.port,
@@ -40,13 +40,14 @@ class SSH(object):
 
     @property
     def sftp(self):
+        """ Access the SFTP client """
         if self._sftp is None:
             self._sftp = self.client.open_sftp()
 
         return self._sftp
 
     def close(self):
-        """Close the ssh connection."""
+        """Close the SSH connection."""
         if self._sftp:
             self._sftp.close()
         self.client.close()
@@ -77,6 +78,8 @@ class SSH(object):
 
     def put(self, local_path, remote_path):
         """Transfer files from this machine to the remote.
+
+        This command will create any directories as needed.
 
         Example:
 
@@ -124,6 +127,11 @@ class SSH(object):
             return False
 
         return stat.S_ISDIR(mode)
+
+    def pwd(self, cwd):
+        """ Run pwd in the machine """
+        stdout, _ = self.run(cmd='pwd', cwd=cwd)
+        return stdout.strip()
 
     def isfile(self, path):
         """ Return true if path is a file """

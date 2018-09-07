@@ -90,6 +90,20 @@ def test_get(testdirectory, vagrant):
 
         assert os.path.isfile(local_path)
 
+
+def test_sshdirectory_path(sshdirectory):
+
+    # All subdirectories are create in the ~/pytest_temp and the
+    # subdirectories are named after the test-cast e.g. in this
+    # case test_sshdirectory_path
+
+    assert sshdirectory.path() == '/home/vagrant/pytest_temp/test_sshdirectory_path'
+
+
+def test_sshdirectory_basic(sshdirectory):
+    test_dir = sshdirectory.mkdir('testdir')
+    test_dir.run('touch hello_world.txt')
+
     # ssh.rm('hello', force=True)
     # out, _ = ssh.run('ls')
     # assert "hello" not in out

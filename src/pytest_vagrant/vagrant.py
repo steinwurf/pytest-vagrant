@@ -9,23 +9,6 @@ from status import Status
 from utils import walk_up
 
 
-@pytest.fixture(scope='session')
-def vagrant(request):
-    """ Creates the py.test fixture to make it usable withing the unit tests.
-    See the Vagrant class for more information.
-    """
-
-    vagrantfile = request.config.getoption('vagrantfile')
-
-    return Vagrant(vagrantfile=vagrantfile)
-
-
-def pytest_addoption(parser):
-    parser.addoption(
-        '--vagrantfile', action='store', default=None,
-        help='Specify the vagrantfile to use')
-
-
 class Vagrant(object):
     """ Vagrant provides access to a virtual machine through vagrant.
 
@@ -78,7 +61,7 @@ class Vagrant(object):
 
         if not self.status.running:
             raise RuntimeError(
-                "Dispite our efforts, the vagrant machine not running")
+                "Despite our efforts, the vagrant machine not running")
 
     def vagrant_file(self):
         """Return the Vagrantfile used for the vagrant machine."""
