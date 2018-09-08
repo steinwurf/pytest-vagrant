@@ -24,7 +24,7 @@ def walk_up(bottom):
         bottom = new_path
 
 
-def path_split(path):
+def path_file_split(path):
     """ Split a path into a list of directories and a filename.
 
     :param path: A path as a string.
@@ -43,3 +43,25 @@ def path_split(path):
             break
 
     return path_split[:-1], path_split[-1]
+
+
+def path_split(path):
+    """ Split a path into a list of directories
+
+    :param path: A path as a string.
+    :return: list of directories.
+    """
+    path_split = []
+
+    while path:
+        path, leaf = os.path.split(path)
+
+        if leaf:
+            # Adds one element, at the beginning of the list
+            path_split = [leaf] + path_split
+
+        if path == '/':
+            path_split = [path] + path_split
+            break
+
+    return path_split

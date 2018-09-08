@@ -30,9 +30,9 @@ def sshdirectory_pytest(vagrant):
     with vagrant.ssh() as ssh:
 
         # We create our test directory in the home dir
-        home_dir = SSHDirectory(ssh=ssh, cwd="~")
+        home_dir = SSHDirectory(ssh=ssh.client, sftp=ssh.sftp, cwd="~")
 
-        if home_dir.contains_dir('pytest_temp'):
+        if home_dir.isdir('pytest_temp'):
             home_dir.rmdir('pytest_temp')
 
         pytest_dir = home_dir.mkdir('pytest_temp')
