@@ -15,9 +15,13 @@ class SSHDirectory(object):
     A directory on the SSH host
     """
 
-    def __init__(self, ssh, sftp, cwd='~'):
+    def __init__(self, ssh, sftp, cwd):
         self.ssh = ssh
         self.sftp = sftp
+
+        # Some commands like running stats to determine if path is
+        # file or directory require abosolute paths
+        assert(os.path.isabs(cwd))
         self.cwd = cwd
 
     def run(self, command):
@@ -52,40 +56,36 @@ class SSHDirectory(object):
         result = self.run(command='pwd')
         return result.stdout.strip()
 
-    # def path(self):
-    #     return self.ssh.pwd(cwd=self.cwd)
+    def put_file(self, local_file, rename_as=""):
+        """Transfer files from this machine to the remote.
+        """
+        if not os.path.isfile(local_file):
+            raise RuntimeError("Not a valid file {}".format(local_file))
 
-    # def copy_file(self, local_path, rename_as=""):
-    #     """Transfer files from this machine to the remote.
+        if rename_as:
+            remote_file = os.path.join(self.cwd, rename_as)
+        else:
+            filename = os.path.basename(local_file)
+            remote_file = os.path.join(self.cwd, filename)
 
-    #     This command will create any directories as needed.
+        self.sftp.put(localpath=local_file, remotepath=remote_file,
+                      confirm=True)
 
-    #     Example:
+        statinfo = os.stat(local_file)
+        self.sftp.chmod(path=remote_file, mode=statinfo.st_mode)
 
-    #         ssh.put(local_path='local/file1',
-    #                 remote_path='/remote/location1')
+    def get_file(self, remote_file, local_file):
+        """Transfer files from the remote to this machine.
+        """
+        remote_file = os.path.join(self.cwd, remote_file)
 
-    #     """
+        self.sftp.get(remotepath=remote_file, localpath=local_file)
 
-    #     if not os.path.isfile(local_path):
-    #         raise RuntimeError("Not a valid file {}".format(local_path))
+        statinfo = self.sftp.stat(remote_file)
+        os.chmod(local_file, statinfo.st_mode)
 
-    #     if rename_as:
-    #         remote_path = os.path.join(self.cwd, rename_as)
-    #     else:
-    #         file_name = os.path.basename(local_path)
-    #         remote_path = os.path.join(self.cwd, file_name)
-
-    #     self.ssh.put(local_path=local_path, remote_path=remote_path)
-
-    # def listdir(self):
-    #     """ Return a list of files in the directory """
-    #     return self.ssh.listdir(path=self.cwd)
-
-    # def contains_dir(self, directory):
-    #     """ Return true if path is a directory """
-    #     path = os.path.join(self.cwd, directory)
-    #     return self.ssh.isdir(path)
+    def rename(self, old_path, new_path):
+        self.sftp.rename(oldpath=old_path, newpath=new_path)
 
     def isdir(self, path):
         """ Return true if path is a directory """
@@ -99,52 +99,41 @@ class SSHDirectory(object):
 
         return stat.S_ISDIR(mode)
 
+    def listdir(self):
+        """ Return a list of files in the directory """
+        return self.sftp.listdir(path=self.cwd)
+
     def rmdir(self, path):
+
+        # Paramiko has a function for removing directories. However,
+        # it does not work with non-empty directories. Instead we just
+        # resort to basic shell commands
+        # https://stackoverflow.com/a/35497166/1717320
 
         path = os.path.join(self.cwd, path)
 
-        self.sftp.rmdir(path=path)
+        self.run(command="rm -rf %s" % path)
 
     def mkdir(self, path):
 
         path = os.path.join(self.cwd, path)
 
-        remote_dirs = pytest_vagrant.utils.path_split(path=path)
+        # As with rmdir Paramiko does not support recursively creating
+        # directories so we just resort to shell commands:
+        # https://stackoverflow.com/a/14819803/1717320
 
-        for path in remote_dirs:
-            try:
-                # http://docs.paramiko.org/en/2.4/api/sftp.html
-                self.sftp.chdir(path=path)
-            except IOError:
-                self.sftp.mkdir(path=path)
-                self.sftp.chdir(path=path)
-
-        self.sftp.chdir(path=None)
+        self.run(command="mkdir -p %s" % path)
 
         return SSHDirectory(ssh=self.ssh, sftp=self.sftp, cwd=path)
 
-    # def contains_file(self, filename):
-    #     files = self.listdir()
+    def isfile(self, path):
+        """ Return true if path is a file """
+        path = os.path.join(self.cwd, path)
 
-    #     for f in files:
-    #         if not self.isfile(f):
-    #             continue
+        try:
+            mode = self.sftp.stat(path=path).st_mode
+        except IOError:
+            print("EXCEPT")
+            return False
 
-    #         if os.path.basename(f) == filename:
-    #             return True
-
-    #     return False
-
-    # def isfile(self, filename):
-    #     return self.ssh.isfile(os.path.join(self.cwd, filename))
-
-    # def mkdir(self, directory):
-    #     """ Return true if path is a directory """
-    #     self.ssh.mkdir(path=directory, cwd=self.cwd)
-
-    #     return SSHDirectory(ssh=self.ssh,
-    #                         cwd=os.path.join(self.cwd, directory))
-
-    # def rmdir(self, directory):
-    #     """ Remove the directory """
-    #     self.ssh.rmdir(path=directory, cwd=self.cwd)
+        return stat.S_ISREG(mode)

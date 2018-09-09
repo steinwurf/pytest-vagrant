@@ -101,9 +101,32 @@ def test_sshdirectory_path(sshdirectory):
 
 
 def test_sshdirectory_basic(sshdirectory):
-    pass
-    #test_dir = sshdirectory.mkdir('testdir')
-    #test_dir.run('touch hello_world.txt')
+    test_dir = sshdirectory.mkdir('testdir')
+    test_dir.run('touch hello_world.txt')
+
+    assert test_dir.isfile("hello_world.txt")
+
+
+def test_sshdirectory_copy_file(testdirectory, sshdirectory):
+
+    file_path = testdirectory.write_text(
+        "test.txt", data=u"hello", encoding="utf-8")
+
+    sshdirectory.put_file(local_file=file_path)
+    assert sshdirectory.isfile("test.txt")
+
+    sshdirectory.put_file(local_file=file_path, rename_as="ok.txt")
+    assert sshdirectory.isfile("ok.txt")
+
+
+def test_sshdirectory_run(sshdirectory):
+    test_dir = sshdirectory.mkdir('testdir')
+    test_dir.run('touch hello_world.txt')
+
+    assert test_dir.isfile("hello_world.txt")
+
+    res = test_dir.run('ls -la')
+    res.match(stdout="*hello_world.txt*")
 
     # ssh.rm('hello', force=True)
     # out, _ = ssh.run('ls')

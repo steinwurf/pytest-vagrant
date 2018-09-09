@@ -29,8 +29,15 @@ def sshdirectory_pytest(vagrant):
 
     with vagrant.ssh() as ssh:
 
+        # Get the home dir
+        _, stdout, _ = ssh.client.exec_command('cd ~;pwd')
+        if stdout.channel.recv_exit_status() != 0:
+            raise RuntimeError("Could not determine home dir")
+
+        cwd = stdout.read().strip()
+
         # We create our test directory in the home dir
-        home_dir = SSHDirectory(ssh=ssh.client, sftp=ssh.sftp, cwd="~")
+        home_dir = SSHDirectory(ssh=ssh.client, sftp=ssh.sftp, cwd=cwd)
 
         if home_dir.isdir('pytest_temp'):
             home_dir.rmdir('pytest_temp')
@@ -45,5 +52,7 @@ def sshdirectory(sshdirectory_pytest, request):
     """ Creates the py.test fixture to make it usable withing the unit tests.
     See the Vagrant class for more information.
     """
+
+    assert sshdirectory_pytest.getcwd() == '/home/vagrant/pytest_temp'
 
     return sshdirectory_pytest.mkdir(request.node.name)
