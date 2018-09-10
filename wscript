@@ -136,8 +136,8 @@ def _pytest(bld):
         # Make python not write any .pyc files. These may linger around
         # in the file system and make some tests pass although their .py
         # counter-part has been e.g. deleted
-        command = 'python -B -m pytest {} --basetemp {}'.format(
-            testdir.abspath(), basetemp)
+        command = 'python -B -m pytest {} --basetemp {} --vagrantfile {}'.format(
+            testdir.abspath(), basetemp, bld.path.abspath())
 
         if bld.options.verbose:
             command += " --capture=no"

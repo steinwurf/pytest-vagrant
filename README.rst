@@ -36,7 +36,7 @@ vagrant environment on the machine running the test code.
 You can pass your the path to your ``Vagrantfile`` by adding ``--vagrantfile``
 when running py.test e.g.::
 
-    python -m pytest --vagrantfile ../vagrant test_directory
+    python -m pytest test_directory --vagrantfile ../vagrant
 
 One way to interace with the Vagrant VM is over ssh::
 

@@ -26,7 +26,7 @@ class Vagrant(object):
         if vagrantfile is None:
             self.cwd = os.getcwd()
         elif os.path.isfile(vagrantfile):
-            self.cwd = os.path.basename(vagrantfile)
+            self.cwd = os.path.dirname(vagrantfile)
         elif os.path.isdir(vagrantfile):
             self.cwd = vagrantfile
         else:
