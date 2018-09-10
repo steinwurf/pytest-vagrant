@@ -30,8 +30,33 @@ Example::
         if vagrant.status.not_created:
             vagrant.up()
 
-The vagrant argument is an instance of Vagrant and represents the vagrant
-environment on the machine running the test code.
+The ``vagrant`` argument is an instance of Vagrant and represents the
+vagrant environment on the machine running the test code.
+
+You can pass your the path to your ``Vagrantfile`` by adding ``--vagrantfile``
+when running py.test e.g.::
+
+    python -m pytest test_directory --vagrantfile ../vagrant
+
+One way to interace with the Vagrant VM is over ssh::
+
+    def test_this_ssh(vagrant):
+
+        with vagrant.ssh() as ssh:
+            stdin, stdout, stderr = ssh.exec_command('ls -la')
+            ...
+
+An even easier way is to use the ``sshdirectory`` fixture for
+running commands and working with files on the host::
+
+    def test_this_dir(sshdirectory):
+
+        testdir = sshdirectory.mkdir('test')
+        testdir.run('touch hello_world.txt')
+        assert testdir.contains_file('hello_world.txt')
+
+        testdir.rmfile('hello_world.txt')
+        assert not testdir.contains_file('hello_world.txt')
 
 Relase new version
 ==================

@@ -15,7 +15,7 @@ with io.open(os.path.join(cwd, 'wscript'), encoding='utf-8') as fd:
     VERSION = None
 
     regex = re.compile(
-    r"""
+        r"""
     (                   # Group and match
         VERSION         #    Match 'VERSION'
         \s*             #    Match zero or more spaces
@@ -28,8 +28,6 @@ with io.open(os.path.join(cwd, 'wscript'), encoding='utf-8') as fd:
     )                   # End of group
     '                   # Match '
     """, re.VERBOSE)
-
-
 
     for line in fd:
 
@@ -72,6 +70,6 @@ setup(
     package_dir={"": "src"},
     install_requires=['pytest', 'paramiko'],
     entry_points={
-        'pytest11': ['vagrant = pytest_vagrant.vagrant'],
+        'pytest11': ['vagrant = pytest_vagrant.fixtures'],
     },
 )

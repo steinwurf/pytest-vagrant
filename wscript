@@ -17,22 +17,12 @@ top = '.'
 VERSION = '1.0.0'
 
 from waflib.Build import BuildContext
+
+
 class UploadContext(BuildContext):
-        cmd = 'upload'
-        fun = 'upload'
+    cmd = 'upload'
+    fun = 'upload'
 
-
-def resolve(ctx):
-
-    # Testing dependencies
-    ctx.add_dependency(
-        name='virtualenv',
-        recurse=False,
-        optional=False,
-        resolver='git',
-        method='checkout',
-        checkout='15.1.0',
-        sources=['github.com/pypa/virtualenv.git'])
 
 def options(opt):
 
@@ -44,6 +34,7 @@ def options(opt):
         '--pytest_basetemp', default='pytest_temp',
         help='Set the basetemp folder where pytest executes the tests')
 
+
 def configure(conf):
 
     # Check if we have vagrant installed, needed to run the mininet
@@ -54,10 +45,11 @@ def configure(conf):
     # tests
     conf.find_program('VBoxManage', mandatory=False)
 
+
 def build(bld):
 
     # Create a virtualenv in the source folder and build universal wheel
-    venv = _create_virtualenv(cwd=bld.path.abspath(), ctx=bld)
+    venv = bld.create_virtualenv(cwd=bld.path.abspath(), overwrite=False)
 
     with venv:
         venv.pip_install(['wheel'])
@@ -75,15 +67,6 @@ def build(bld):
     if bld.options.run_tests:
         _pytest(bld=bld)
 
-def _create_virtualenv(ctx, cwd):
-    # Make sure the virtualenv Python module is in path
-    venv_path = ctx.dependency_path('virtualenv')
-
-    env = os.environ.copy()
-    env.update({'PYTHONPATH': os.path.pathsep.join([venv_path])})
-
-    from waflib.extras.wurf.virtualenv import VirtualEnv
-    return VirtualEnv.create(cwd=cwd, env=env, name=None, ctx=ctx, overwrite=False)
 
 def _find_wheel(ctx):
     """ Find the .whl file in the dist folder. """
@@ -101,7 +84,7 @@ def _find_wheel(ctx):
 def upload(bld):
     """ Upload the built wheel to PyPI (the Python Package Index) """
 
-    venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
+    venv = bld.create_virtualenv(cwd=bld.bldnode.abspath())
 
     with venv:
         venv.pip_install(['twine'])
@@ -121,10 +104,10 @@ def _pytest(bld):
 
     # Create the virtualenv in the build folder to make sure we run
     # isolated from the sources
-    venv = _create_virtualenv(cwd=bld.bldnode.abspath(), ctx=bld)
+    venv = bld.create_virtualenv(cwd=bld.bldnode.abspath())
     with venv:
         # with venv:
-        venv.pip_install(['pytest', 'paramiko'])
+        venv.pip_install(['pytest', 'pytest_testdirectory', 'paramiko'])
 
         # Install the pytest-vagrant plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)
@@ -133,7 +116,8 @@ def _pytest(bld):
 
         # Added our systems path to the virtualenv (otherwise we cannot
         # find vagrant)
-        venv.env['PATH'] = os.path.pathsep.join([venv.env['PATH'], os.environ['PATH']])
+        venv.env['PATH'] = os.path.pathsep.join(
+            [venv.env['PATH'], os.environ['PATH']])
 
         # We override the pytest temp folder with the basetemp option,
         # so the test folders will be available at the specified location
@@ -152,9 +136,8 @@ def _pytest(bld):
         # Make python not write any .pyc files. These may linger around
         # in the file system and make some tests pass although their .py
         # counter-part has been e.g. deleted
-        command = 'python -B -m pytest {} --basetemp {}'.format(
-            testdir.abspath(), basetemp)
-
+        command = 'python -B -m pytest {} --basetemp {} --vagrantfile {}'.format(
+            testdir.abspath(), basetemp, bld.path.abspath())
 
         if bld.options.verbose:
             command += " --capture=no"
