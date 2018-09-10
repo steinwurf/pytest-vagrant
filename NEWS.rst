@@ -6,7 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Major: Reworked the structure. Added the sshdirectory fixture to ease
+  the job of creating test directories and working with them.
 
 1.0.0
 -----
