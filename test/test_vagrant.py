@@ -23,74 +23,6 @@ def test_port(vagrant):
     assert len(vagrant.port()) != 0
 
 
-# def test_ssh(vagrant):
-#     with vagrant.ssh() as ssh:
-
-#         if ssh.isdir('testdir'):
-#             ssh.rmdir('testdir')
-
-#         assert ssh.isdir('testdir') == False
-
-#         ssh.put(local_path='../waf', remote_path='testdir/waf')
-#         ssh.run('python waf --version', cwd='testdir')
-#         assert ssh.isdir('testdir') == True
-
-
-# def test_mkdir(vagrant):
-
-#     with vagrant.ssh() as ssh:
-
-#         if ssh.isdir('testdir'):
-#             ssh.rmdir('testdir')
-
-#         ssh.mkdir(path='testdir/hello/dir2')
-
-#         assert ssh.isdir(path='testdir/hello/dir2')
-
-#         ssh.mkdir(path='dir3', cwd='testdir/hello/dir2')
-
-#         assert ssh.isdir(path='testdir/hello/dir2/dir3')
-
-#         ssh.rmdir('testdir')
-
-#         assert ssh.isdir(path='testdir/hello/dir2/dir3') == False
-#         assert ssh.isdir(path='testdir/hello/dir2') == False
-#         assert ssh.isdir(path='testdir') == False
-
-
-# def test_isfile_isdir(vagrant):
-#     with vagrant.ssh() as ssh:
-
-#         if ssh.isdir('testdir'):
-#             ssh.rmdir('testdir')
-
-#         ssh.mkdir(path='testdir')
-#         ssh.run(cmd='touch hello', cwd='testdir')
-
-#         assert ssh.isfile(path='testdir/hello') == True
-#         assert ssh.isfile(path='testdir') == False
-
-
-# def test_get(testdirectory, vagrant):
-#     with vagrant.ssh() as ssh:
-
-#         if ssh.isdir('testdir'):
-#             ssh.rmdir('testdir')
-
-#         ssh.mkdir(path='testdir')
-#         ssh.run(cmd='touch hello', cwd='testdir')
-
-#         assert ssh.isfile(path='testdir/hello') == True
-
-#         local_path = os.path.join(testdirectory.path(), 'hello')
-
-#         assert not os.path.isfile(local_path)
-
-#         ssh.get(local_path, remote_path='testdir/hello')
-
-#         assert os.path.isfile(local_path)
-
-
 def test_sshdirectory_path(sshdirectory):
 
     # All subdirectories are create in the ~/pytest_temp and the
@@ -100,57 +32,62 @@ def test_sshdirectory_path(sshdirectory):
     assert sshdirectory.getcwd() == '/home/vagrant/pytest_temp/test_sshdirectory_path'
 
 
-def test_sshdirectory_basic(sshdirectory):
-    test_dir = sshdirectory.mkdir('testdir')
-    test_dir.run('touch hello_world.txt')
-
-    assert test_dir.isfile("hello_world.txt")
-
-
-def test_sshdirectory_copy_file(testdirectory, sshdirectory):
+def test_sshdirectory_put_file(testdirectory, sshdirectory):
 
     file_path = testdirectory.write_text(
         "test.txt", data=u"hello", encoding="utf-8")
 
     sshdirectory.put_file(local_file=file_path)
-    assert sshdirectory.isfile("test.txt")
+    assert sshdirectory.contains_file("test.txt")
 
     sshdirectory.put_file(local_file=file_path, rename_as="ok.txt")
-    assert sshdirectory.isfile("ok.txt")
+    assert sshdirectory.contains_file("ok.txt")
+
+
+def test_sshdirectory_get_file(testdirectory, sshdirectory):
+    test_dir = sshdirectory.mkdir('testdir')
+    test_dir.run('touch hello_world.txt')
+
+    assert test_dir.contains_file("hello_world.txt")
+
+    test_dir.get_file(remote_file="hello_world.txt",
+                      local_directory=testdirectory.path())
+
+    testdirectory.contains_file("hello_world.txt")
 
 
 def test_sshdirectory_run(sshdirectory):
     test_dir = sshdirectory.mkdir('testdir')
     test_dir.run('touch hello_world.txt')
 
-    assert test_dir.isfile("hello_world.txt")
+    assert test_dir.contains_file("hello_world.txt")
 
     res = test_dir.run('ls -la')
     res.match(stdout="*hello_world.txt*")
 
-    # ssh.rm('hello', force=True)
-    # out, _ = ssh.run('ls')
-    # assert "hello" not in out
-    # ssh.run('touch hello')
-    # out, _ = ssh.run('ls')
-    # assert "hello" in out
-    # ssh.rm('hello')
-    # out, _ = ssh.run('ls')
-    # assert "hello" not in out
-    # ssh.rm('w', force=True)
-    # out, _ = ssh.run('ls')
-    # ssh.put(local_path='../waf', remote_path='/waf')
-    # out, _ = ssh.run('ls')
-    # out, _ = ssh.run('ls /')
-    # out, _ = ssh.run('pwd')
-    # out, _ = ssh.run('python waf --version')
-    # assert "waf" in out
-    # ssh.rm('waf')
 
-    # ssh.rm('woop_file', force=True)
-    # ssh.run('echo woop >> woop_file')
-    # ssh.get('woop_file', 'woop_file')
-    # with open('woop_file', 'r') as f:
-    #     woop_local = f.read()
-    #     woop_remote, _ = ssh.run('cat woop_file')
-    #     assert woop_local == woop_remote
+def test_sshdirectory_from_path(sshdirectory):
+    tmp_dir = sshdirectory.from_path('/tmp')
+    assert tmp_dir.getcwd() == '/tmp'
+
+
+def test_sshdirectory_mkdir_rmdir(sshdirectory):
+    test_dir = sshdirectory.mkdir('testdir')
+    test_dir.run('touch hello')
+
+    assert sshdirectory.contains_dir('testdir')
+
+    sshdirectory.rmdir('testdir')
+
+    assert not sshdirectory.contains_dir('testdir')
+
+
+def test_sshdirectory_rmfile(sshdirectory):
+    test_dir = sshdirectory.mkdir('testdir')
+    test_dir.run('touch hello_world.txt')
+
+    assert test_dir.contains_file("hello_world.txt")
+
+    test_dir.rmfile("hello_world.txt")
+
+    assert not test_dir.contains_file("hello_world.txt")
