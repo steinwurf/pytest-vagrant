@@ -114,9 +114,17 @@ class Vagrant(object):
             raise RuntimeError("Vagrant machine not running")
         return subprocess.check_output('vagrant ssh-config', shell=True, cwd=self.cwd)
 
+    def reset(self):
+        """ Reset the vagrant box to it's original state. """
+
+        # From https://serverfault.com/a/753801
+        self.destroy()
+        self.up()
+
     def destroy(self):
         """Destroy the underlying vagrant machine."""
-        subprocess.check_output('vagrant destroy', shell=True, cwd=self.cwd)
+        subprocess.check_output(
+            'vagrant destroy --force', shell=True, cwd=self.cwd)
 
     def halt(self):
         """Halt the underlying vagrant machine."""
@@ -135,6 +143,38 @@ class Vagrant(object):
         if self.status.saved:
             raise RuntimeError("Vagrant machine not suspended (saved)")
         subprocess.check_output('vagrant resume', shell=True, cwd=self.cwd)
+
+    def snapshot_list(self):
+        """Return a list of snapshots for the mach."""
+        if self.status.not_created:
+            raise RuntimeError("Vagrant machine not created")
+
+        output = subprocess.check_output(
+            'vagrant snapshot list',
+            shell=True, cwd=self.cwd)
+
+        if 'No snapshots have been taken yet!' in output:
+            return []
+        else:
+            return output.splitlines()
+
+    def snapshot_restore(self, snapshot):
+        """ Restore the machine to a saved snapshot """
+        if not self.status.running:
+            raise RuntimeError("Vagrant machine not running")
+
+        return subprocess.check_output(
+            'vagrant snapshot restore {}'.format(snapshot),
+            shell=True, cwd=self.cwd)
+
+    def snapshot_save(self, snapshot):
+        """ Restore the machine to a saved snapshot """
+        if not self.status.running:
+            raise RuntimeError("Vagrant machine not running")
+
+        return subprocess.check_output(
+            'vagrant snapshot save {}'.format(snapshot),
+            shell=True, cwd=self.cwd)
 
     def version(self):
         """Return the version of the vagrant machine."""

@@ -12,13 +12,28 @@ def vagrant(request):
 
     vagrantfile = request.config.getoption('vagrantfile')
 
-    return pytest_vagrant.vagrant.Vagrant(vagrantfile=vagrantfile)
+    vagrant = pytest_vagrant.vagrant.Vagrant(vagrantfile=vagrantfile)
+
+    if request.config.getoption('vagrantreset'):
+        snapshots = vagrant.snapshot_list()
+
+        if 'vagrantreset' in snapshots:
+            vagrant.snapshot_restore(snapshot='vagrantreset')
+        else:
+            vagrant.reset()
+            vagrant.snapshot_save(snapshot='vagrantreset')
+
+    return vagrant
 
 
 def pytest_addoption(parser):
     parser.addoption(
         '--vagrantfile', action='store', default=None,
         help='Specify the vagrantfile to use')
+
+    parser.addoption(
+        '--vagrantreset', action='store_true', default=False,
+        help='We want to reset the machine with every use')
 
 
 @pytest.fixture(scope='session')
