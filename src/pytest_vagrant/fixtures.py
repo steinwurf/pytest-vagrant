@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function
+
 import pytest
 
 import pytest_vagrant.vagrant

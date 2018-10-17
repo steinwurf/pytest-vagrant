@@ -1,8 +1,7 @@
-from __future__ import print_function
+# -*- coding: utf-8 -*-
 
+from __future__ import absolute_import, print_function
 import os
-import sys
-import re
 import stat
 
 import pytest_vagrant.utils
@@ -21,7 +20,7 @@ class SSHDirectory(object):
 
         # Some commands like running stats to determine if path is
         # file or directory require abosolute paths
-        assert(os.path.isabs(cwd))
+        assert os.path.isabs(cwd)
         self.cwd = cwd
 
     def from_path(self, path):

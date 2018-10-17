@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function
 import re
+
 
 class Status(object):
     """Wraps the vagrant status."""
@@ -11,7 +15,7 @@ class Status(object):
     NOT_CREATED = 'not created'  # vagrant destroy
     POWEROFF = 'poweroff'  # vagrant halt
     ABORTED = 'aborted'  # The VM is in an aborted state
-    SAVED = 'saved' # vagrant suspend
+    SAVED = 'saved'  # vagrant suspend
     # LXC statuses
     STOPPED = 'stopped'
     FROZEN = 'frozen'

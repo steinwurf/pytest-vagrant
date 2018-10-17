@@ -1,15 +1,9 @@
-from __future__ import print_function
+# -*- coding: utf-8 -*-
 
-import os
-import sys
+from __future__ import absolute_import, print_function
 import re
-import stat
 
 from paramiko import SSHClient, AutoAddPolicy
-
-import pytest_vagrant.utils
-import pytest_vagrant.errors
-import pytest_vagrant.runresult
 
 
 class SSH(object):
