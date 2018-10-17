@@ -1,5 +1,12 @@
+# -*- coding: utf-8 -*-
+
+# Import python libs
+from __future__ import absolute_import, print_function
+
+# Import 3rd-party libs
 import pytest
 
+# Import project libs
 import pytest_vagrant.vagrant
 from pytest_vagrant.sshdirectory import SSHDirectory
 

@@ -1,5 +1,10 @@
+# -*- coding: utf-8 -*-
+
+# Import python libs
+from __future__ import absolute_import, print_function
 import fnmatch
 
+# Import project libs
 from pytest_vagrant.errors import MatchError
 
 
@@ -54,7 +59,7 @@ class RunResult(object):
         output = self.stdout if stdout else self.stderr
 
         match_lines = fnmatch.filter(output.splitlines(), match)
-        if len(match_lines) == 0:
+        if not match_lines:
             raise MatchError(match=match, output=output)
 
     def __str__(self):

@@ -1,12 +1,17 @@
-import pytest
+# -*- coding: utf-8 -*-
+
+# Import python libs
+from __future__ import absolute_import, print_function
 import subprocess
 import re
 import os
-import py
 
-from ssh import SSH
-from status import Status
-from utils import walk_up
+# Import project libs
+from pytest_vagrant.ssh import SSH
+from pytest_vagrant.status import Status
+from pytest_vagrant.utils import walk_up
+
+INSTALLED_VERSION_RE = re.compile(r'Installed Version: (\d+\.\d+\.\d+)')
 
 
 class Vagrant(object):
@@ -53,10 +58,10 @@ class Vagrant(object):
             raise e
 
         if self.status.not_created or self.status.poweroff:
-            print "run up"
+            print("run up")
             self.up()
         elif self.status.saved:
-            print "run resume"
+            print("run resume")
             self.resume()
 
         if not self.status.running:
@@ -180,5 +185,5 @@ class Vagrant(object):
         """Return the version of the vagrant machine."""
         out = subprocess.check_output(
             'vagrant version', shell=True, cwd=self.cwd)
-        m = re.search('Installed Version: (\d+\.\d+\.\d+)', out)
+        m = INSTALLED_VERSION_RE.search(out)
         return m.group(1)
