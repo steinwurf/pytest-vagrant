@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# Import python libs
 from __future__ import absolute_import, print_function
 import subprocess
 import re
 import os
 
-# Import project libs
 from pytest_vagrant.ssh import SSH
 from pytest_vagrant.status import Status
 from pytest_vagrant.utils import walk_up

@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Import python libs
 from __future__ import absolute_import, print_function
 import os
 import stat
 
-# Import project libs
 import pytest_vagrant.utils
 import pytest_vagrant.errors
 import pytest_vagrant.runresult
