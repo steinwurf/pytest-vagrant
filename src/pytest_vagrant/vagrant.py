@@ -28,6 +28,7 @@ class Vagrant(object):
     def __init__(self, project, path=None):
         """ Creates a new Vagrant object
 
+        :param 
         :param path: The path to where the Vagrantfiles and vagrant commands
                      will run.
         """
@@ -41,7 +42,8 @@ class Vagrant(object):
         :param name: The name chosen for this machine as a string. Should be
             should be project specific.
         """
-        box_hash = hashlib.sha1(box + name.encode('utf-8')).hexdigest()[:6]
+        id = self.project + box + name
+        id = hashlib.sha1(id.encode('utf-8')).hexdigest()[:6]
 
     @staticmethod
     def default_path():
