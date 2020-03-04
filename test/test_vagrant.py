@@ -1,12 +1,19 @@
 import os
 
+from pytest_vagrant import Vagrant
+
 
 def test_vagrant_fixture(vagrant):
     # We don't do anything just check that the fixture is available
     pass
 
-def test_vagrant_import():
-    from pytest_vagrant import Vagrant
+
+def test_vagrant_from_box(testdirectory):
+
+    vagrant = Vagrant(project="pytest_vagrant",
+                      machines_dir=testdirectory.path())
+
+    vagrant.from_box(box="ubuntu/eoan64", name="pytest_vagrant")
 
 # def test_vagrantfile(vagrant):
 #     assert vagrant.vagrant_file() is not None

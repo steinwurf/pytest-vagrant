@@ -34,7 +34,9 @@ def vagrant(request):
     tests. See the Vagrant class for more information.
     """
 
-    return pytest_vagrant.vagrant.Vagrant()
+    project = request.config.getoption('basepath')
+
+    return pytest_vagrant.vagrant.Vagrant(project="fixture")
 
 
 def pytest_addoption(parser):

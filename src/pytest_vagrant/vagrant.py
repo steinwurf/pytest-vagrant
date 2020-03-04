@@ -12,6 +12,87 @@ from pytest_vagrant.utils import walk_up
 
 INSTALLED_VERSION_RE = re.compile(r'Installed Version: (\d+\.\d+\.\d+)')
 
+# Vagrant uses the Vagrantfile as configuration file. You can read more
+# about it here:
+# https://www.vagrantup.com/docs/vagrantfile/
+VAGRANTFILE_TEMPLATE = r"""
+Vagrant.configure("2") do |config|
+  config.vm.box = "{box}"
+  config.vm.provider "virtualbox" do |v|
+    v.name = "{unique_name}"
+  end
+end
+""".strip()
+
+
+class MachineStatus(object):
+    """Wraps the vagrant status."""
+    # Some machine-readable state values returned by status
+    # There are likely some missing, but if you use vagrant you should
+    # know what you are looking for.
+    # These exist partly for convenience and partly to document the output
+    # of vagrant.
+    RUNNING = 'running'  # vagrant up
+    NOT_CREATED = 'not created'  # vagrant destroy
+    POWEROFF = 'poweroff'  # vagrant halt
+    ABORTED = 'aborted'  # The VM is in an aborted state
+    SAVED = 'saved'  # vagrant suspend
+    # LXC statuses
+    STOPPED = 'stopped'
+    FROZEN = 'frozen'
+    # libvirt
+    SHUTOFF = 'shutoff'
+
+    def __init__(self, out):
+        m = re.search(r'\w+\s+(.+)\s+\(.+\)', out)
+        self.status = m.group(1)
+
+        self.running = self.status == Status.RUNNING
+        self.not_created = self.status == Status.NOT_CREATED
+        self.poweroff = self.status == Status.POWEROFF
+        self.aborted = self.status == Status.ABORTED
+        self.saved = self.status == Status.SAVED
+        self.stopped = self.status == Status.STOPPED
+        self.frozen = self.status == Status.FROZEN
+        self.shutoff = self.status == Status.SHUTOFF
+
+    def __str__(self):
+        return self.status
+
+
+class MachineInfo(object):
+
+    def __init__(self, project, box, name, machines_dir):
+
+        hash_input = str(project + name + box).encode('utf-8')
+        self.hash = hashlib.sha1(hash_input).hexdigest()[:6]
+
+        self.project = project
+        self.box = box
+        self.name = name
+        self.unique_name = name + '_' + self.hash
+        self.cwd = os.path.join(machines_dir, self.unique_name)
+
+
+class Machine(object):
+
+    def __init__(self, machine_info):
+        self.machine_info = machine_info
+
+    def status(self):
+        """Return the status of the vagrant machine."""
+        out = self._run('vagrant status')
+
+        return MachineStatus(out)
+
+    def up(self):
+        """Start the underlying vagrant machine."""
+        self._run('vagrant up')
+
+    def _run(self, cmd):
+        return subprocess.check_output(
+            cmd, shell=True, cwd=self.machine_info.cwd)
+
 
 class Vagrant(object):
     """ Vagrant provides access to a virtual machine through vagrant.
@@ -25,32 +106,69 @@ class Vagrant(object):
                 assert 'hello world' in stdout
     """
 
-    def __init__(self, project, path=None):
+    def __init__(self, project, machines_dir=None):
         """ Creates a new Vagrant object
 
-        :param 
-        :param path: The path to where the Vagrantfiles and vagrant commands
+        :param
+        :param machines_dir: The machines_dir to where the Vagrantfiles and vagrant commands
                      will run.
         """
         self.project = project
-        self.path = path if path is None else self.default_path()
+        self.machines_dir = machines_dir if machines_dir is not None else self.default_machines_dir()
 
-    def from_box(box, name):
+    def from_box(self, box, name):
         """ Create a machine from the specified box.
 
         :param box: The Vagrant box to use as a string
-        :param name: The name chosen for this machine as a string. Should be
-            should be project specific.
+        :param name: The name chosen for this machine as a string.
         """
-        id = self.project + box + name
-        id = hashlib.sha1(id.encode('utf-8')).hexdigest()[:6]
+
+        # Lets create a unique id for this machine
+        machine_info = MachineInfo(project=self.project, box=box,
+                                   name=name, machines_dir=self.machines_dir)
+
+        if not os.path.isdir(machine_info.cwd):
+            os.makedirs(machine_info.cwd)
+            self._write_vagrantfile(machine_info)
+
+        machine = Machine(machine_info=machine_info)
+
+        status = machine.status()
+        print(status)
+
+        if status.not_created or status.poweroff:
+            machine.up()
+
+        # # Is this the first time we boot the machine
+        # snapshots = machine.snapshot_list()
+
+        # if 'initial_state' not in snapshots:
+        #     machine.save_snapshot('initial_state')
+
+        #     self.up()
+        #     self.save_snapshot('initial_state')
+
+        #     raise RuntimeError("No machine dir")
+
+    def _write_vagrantfile(self, machine_info):
+
+        assert os.path.isdir(machine_info.cwd)
+
+        vagrantfile_path = os.path.join(machine_info.cwd, "Vagrantfile")
+        assert not os.path.isfile(vagrantfile_path)
+
+        vagrantfile_content = VAGRANTFILE_TEMPLATE.format(
+            unique_name=machine_info.unique_name, box=machine_info.box)
+
+        with open(vagrantfile_path, 'w') as vagrantfile:
+            vagrantfile.write(vagrantfile_content)
 
     @staticmethod
-    def default_path():
+    def default_machines_dir():
         """ This is where we put the Vagrantfiles and run vagrant commands """
         # https://stackoverflow.com/a/4028943
-        home_path = os.path.join(os.path.expanduser("~"))
-        return os.path.join(home_path, '.pytest_vagrant')
+        home_dir = os.path.join(os.path.expanduser("~"))
+        return os.path.join(home_dir, '.pytest_vagrant')
 
     # def __init__(self, vagrantfile=None):
 
