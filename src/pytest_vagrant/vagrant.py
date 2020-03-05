@@ -91,7 +91,7 @@ def parse_snapshot_list(output):
 
     for row in csv.reader(output.splitlines()):
 
-        if row[Format.DATA] != "detail":
+        if row[Format.DATA] not in ["detail", "output"]:
             continue
 
         # if the is a space in the extra data we don't have a valid
@@ -104,14 +104,34 @@ def parse_snapshot_list(output):
     return snapshots
 
 
+class SSHConfig(object):
+    def __init__(self, hostname, username, port, identityfile):
+        self.hostname = hostname
+        self.username = username
+        self.port = port
+        self.identityfile = identityfile
+
+
+def parse_ssh_config(output):
+
+    hostname = re.search(r'HostName (.*)', output).group(1)
+    username = re.search(r'User (.*)', output).group(1)
+    port = int(re.search(r'Port (.*)', output).group(1))
+    identityfile = re.search(r'IdentityFile (.*)', output).group(1)
+
+    return SSHConfig(hostname=hostname, username=username, port=port,
+                     identityfile=identityfile)
+
+
 class Machine(object):
 
-    def __init__(self, box, name, slug, cwd, shell):
+    def __init__(self, box, name, slug, cwd, shell, ssh_factory):
         self.box = box
         self.name = name
         self.slug = slug
         self.cwd = cwd
         self.shell = shell
+        self.ssh_factory = ssh_factory
 
     @property
     def status(self):
@@ -154,7 +174,20 @@ class Machine(object):
         if not self.status.running:
             raise RuntimeError("Vagrant machine not running")
 
-        self.shell.run('vagrant ssh-config', cwd=self.cwd)
+        output = self.shell.run('vagrant ssh-config', cwd=self.cwd)
+        config = parse_ssh_config(output=output)
+
+        print("output: " + output)
+
+        return config
+
+    def ssh(self):
+        """Provide ssh access to the Vagrant machine."""
+        if not self.status.running:
+            raise RuntimeError("Vagrant machine not running")
+
+        print("ssh")
+        return self.ssh_factory(ssh_config=self.ssh_config())
 
     def up(self):
         """Start the underlying vagrant machine."""
@@ -170,17 +203,19 @@ def default_machines_dir():
 
 class MachineFactory(object):
 
-    def __init__(self, shell, machines_dir):
+    def __init__(self, shell, machines_dir, ssh_factory):
         self.shell = shell
         self.machines_dir = machines_dir
+        self.ssh_factory = ssh_factory
 
-    def build(self, box, name):
+    def __call__(self, box, name):
 
         # Get the current working directory for this machine
         slug = slugify.slugify(text=name + '_' + box, separator='_')
         cwd = os.path.join(self.machines_dir, slug)
 
-        return Machine(name=name, box=box, slug=slug, cwd=cwd, shell=self.shell)
+        return Machine(name=name, box=box, slug=slug, cwd=cwd, shell=self.shell,
+                       ssh_factory=self.ssh_factory)
 
     @staticmethod
     def default_machines_dir():
@@ -218,7 +253,7 @@ class Vagrant(object):
         :param name: The name chosen for this machine as a string.
         """
 
-        machine = self.machine_factory.build(box=box, name=name)
+        machine = self.machine_factory(box=box, name=name)
 
         if not os.path.isdir(machine.cwd):
             os.makedirs(machine.cwd)

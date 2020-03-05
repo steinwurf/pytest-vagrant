@@ -57,6 +57,12 @@ SNAPSHOT_LIST = r"""
 1583406926,default,ui,detail,reset2
 """.strip()
 
+# Output from Vagrant 2.2.3
+SNAPSHOT_LIST_2_2_3 = r"""
+1583439756,default,metadata,provider,virtualbox
+1583439756,default,ui,output,reset
+""".strip()
+
 
 def test_machine_snapshot_list():
 
@@ -68,6 +74,9 @@ def test_machine_snapshot_list():
 
     result = pytest_vagrant.vagrant.parse_snapshot_list(SNAPSHOT_LIST)
     assert result == ['reset', 'reset2']
+
+    result = pytest_vagrant.vagrant.parse_snapshot_list(SNAPSHOT_LIST_2_2_3)
+    assert result == ['reset']
 
 
 STATUS = r"""
@@ -89,14 +98,25 @@ def test_run(vagrant):
     machine = vagrant.from_box(
         box="hashicorp/bionic64", name="pytest_vagrant", reset=False)
 
-    # with machine.ssh() as ssh:
+    with machine.ssh() as ssh:
+        cwd = ssh.getcwd()
+        print(cwd)
+
+        ssh.chdir('/tmp')
+        cwd = ssh.getcwd()
+        print(cwd)
+
+        ssh.chdir('~')
+        cwd = ssh.getcwd()
+        print(cwd)
+
+    assert 0
 
     #     ssh.put_file()
     #     ssh.get_file()
     #     ssh.run()
     #     ssh.chdir()
     #     ssh.rmdir()
-    #     ssh.getcwd()
     #     ssh.mkdir()
     #     ssh.contains_dir()
     #     ssh.contains_file()
@@ -116,28 +136,9 @@ Host default
 """.strip()
 
 
-class SSHConfig(object):
-    def __init__(self, hostname, username, port, identityfile):
-        self.hostname = hostname
-        self.username = username
-        self.port = port
-        self.identityfile = identityfile
+def test_parse_ssh_config():
 
-
-def parse_sshconfig(output):
-
-    hostname = re.search(r'HostName (.*)', output).group(1)
-    username = re.search(r'User (.*)', output).group(1)
-    port = int(re.search(r'Port (.*)', output).group(1))
-    identityfile = re.search(r'IdentityFile (.*)', output).group(1)
-
-    return SSHConfig(hostname=hostname, username=username, port=port,
-                     identityfile=identityfile)
-
-
-def test_parse_sshconfig():
-
-    result = parse_sshconfig(output=OUTPUT_SSHCONFIG)
+    result = pytest_vagrant.vagrant.parse_ssh_config(output=OUTPUT_SSHCONFIG)
 
     assert result.hostname == '127.0.0.1'
     assert result.username == 'vagrant'

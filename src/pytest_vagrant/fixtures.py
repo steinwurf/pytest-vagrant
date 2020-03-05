@@ -37,7 +37,7 @@ def vagrant(request):
     machines_dir = pytest_vagrant.default_machines_dir()
 
     machine_factory = pytest_vagrant.MachineFactory(
-        shell=shell, machines_dir=machines_dir)
+        shell=shell, machines_dir=machines_dir, ssh_factory=pytest_vagrant.SSH)
 
     return pytest_vagrant.Vagrant(machine_factory=machine_factory)
 
