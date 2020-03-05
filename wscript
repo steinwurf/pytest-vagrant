@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+from waflib.Build import BuildContext
 import os
 import sys
 import shutil
@@ -15,8 +16,6 @@ import waflib
 top = '.'
 
 VERSION = '1.0.0'
-
-from waflib.Build import BuildContext
 
 
 class UploadContext(BuildContext):
@@ -107,7 +106,7 @@ def _pytest(bld):
     venv = bld.create_virtualenv(cwd=bld.bldnode.abspath())
     with venv:
         # with venv:
-        venv.pip_install(['pytest', 'pytest_testdirectory', 'paramiko'])
+        venv.pip_install(['pytest', 'pytest_testdirectory', 'mock'])
 
         # Install the pytest-vagrant plugin in the virtualenv
         wheel = _find_wheel(ctx=bld)

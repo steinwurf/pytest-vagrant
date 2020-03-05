@@ -3,8 +3,7 @@
 from __future__ import absolute_import, print_function
 
 import pytest
-
-import pytest_vagrant.vagrant
+import pytest_vagrant
 
 
 # @pytest.fixture(scope='session')
@@ -34,9 +33,13 @@ def vagrant(request):
     tests. See the Vagrant class for more information.
     """
 
-    project = request.config.getoption('basepath')
+    shell = pytest_vagrant.Shell()
+    machines_dir = pytest_vagrant.default_machines_dir()
 
-    return pytest_vagrant.vagrant.Vagrant(project="fixture")
+    machine_factory = pytest_vagrant.MachineFactory(
+        shell=shell, machines_dir=machines_dir)
+
+    return pytest_vagrant.Vagrant(machine_factory=machine_factory)
 
 
 def pytest_addoption(parser):
