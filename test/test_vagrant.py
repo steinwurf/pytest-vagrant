@@ -89,6 +89,18 @@ def test_run(vagrant):
     machine = vagrant.from_box(
         box="hashicorp/bionic64", name="pytest_vagrant", reset=False)
 
+    # with machine.ssh() as ssh:
+
+    #     ssh.put_file()
+    #     ssh.get_file()
+    #     ssh.run()
+    #     ssh.chdir()
+    #     ssh.rmdir()
+    #     ssh.getcwd()
+    #     ssh.mkdir()
+    #     ssh.contains_dir()
+    #     ssh.contains_file()
+
 
 OUTPUT_SSHCONFIG = r"""
 Host default
@@ -131,18 +143,6 @@ def test_parse_sshconfig():
     assert result.username == 'vagrant'
     assert result.port == 2222
     assert result.identityfile == '/home/mvp/.pytest_vagrant/private_key'
-
-    # with machine.ssh() as ssh:
-
-    #     ssh.put_file()
-    #     ssh.get_file()
-    #     ssh.run()
-    #     ssh.chdir()
-    #     ssh.rmdir()
-    #     ssh.getcwd()
-    #     ssh.mkdir()
-    #     ssh.contains_dir()
-    #     ssh.contains_file()
 
     # mo
 
