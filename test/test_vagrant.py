@@ -11,7 +11,7 @@ def test_vagrant_fixture(vagrant):
     pass
 
 
-def test_vagrant_from_box(testdirectory):
+def _test_vagrant_from_box(testdirectory):
 
     class FactoryMock(mock.Mock):
         def build(self, box, name):
@@ -50,7 +50,8 @@ SNAPSHOT_NONE = r"""
 1583406503,default,ui,detail,    default: You can take a snapshot using `vagrant snapshot save`. Note that\n    default: not all providers support this yet. Once a snapshot is taken%!(VAGRANT_COMMA) you\n    default: can list them using this command%!(VAGRANT_COMMA) and use commands such as\n    default: `vagrant snapshot restore` to go back to a certain snapshot.
 """.strip()
 
-SNAPSHOT_LIST = r"""
+# Output from Vagrant 2.2.7
+SNAPSHOT_LIST_2_2_7 = r"""
 1583406926,default,metadata,provider,virtualbox
 1583406926,default,ui,output,==> default:
 1583406926,default,ui,detail,reset
@@ -66,16 +67,16 @@ SNAPSHOT_LIST_2_2_3 = r"""
 
 def test_machine_snapshot_list():
 
-    result = pytest_vagrant.vagrant.parse_snapshot_list(SNAPSHOT_NOT_CREATED)
+    result = pytest_vagrant.parse.to_snapshot_list(SNAPSHOT_NOT_CREATED)
     assert result == []
 
-    result = pytest_vagrant.vagrant.parse_snapshot_list(SNAPSHOT_NONE)
+    result = pytest_vagrant.parse.to_snapshot_list(SNAPSHOT_NONE)
     assert result == []
 
-    result = pytest_vagrant.vagrant.parse_snapshot_list(SNAPSHOT_LIST)
+    result = pytest_vagrant.parse.to_snapshot_list(SNAPSHOT_LIST_2_2_7)
     assert result == ['reset', 'reset2']
 
-    result = pytest_vagrant.vagrant.parse_snapshot_list(SNAPSHOT_LIST_2_2_3)
+    result = pytest_vagrant.parse.to_snapshot_list(SNAPSHOT_LIST_2_2_3)
     assert result == ['reset']
 
 
@@ -90,36 +91,56 @@ STATUS = r"""
 
 
 def test_parse_status():
-    result = pytest_vagrant.vagrant.parse_status(output=STATUS)
-    assert result == "running"
+    result = pytest_vagrant.parse.to_status(output=STATUS)
+    assert result.status == "running"
 
 
-def test_run(vagrant):
+def test_run(vagrant, testdirectory):
     machine = vagrant.from_box(
         box="hashicorp/bionic64", name="pytest_vagrant", reset=False)
 
     with machine.ssh() as ssh:
         cwd = ssh.getcwd()
-        print(cwd)
+        assert cwd == '/home/vagrant'
 
-        ssh.chdir('/tmp')
+        ssh.chdir('/home')
         cwd = ssh.getcwd()
-        print(cwd)
+        assert cwd == '/home'
+
+        ssh.chdir('vagrant')
+        cwd = ssh.getcwd()
+        assert cwd == '/home/vagrant'
 
         ssh.chdir('~')
         cwd = ssh.getcwd()
-        print(cwd)
+        assert cwd == '/home/vagrant'
 
-    assert 0
+        assert ssh.is_dir('/home/vagrant') == True
+        assert ssh.is_dir('/home') == True
+        assert ssh.is_dir('~') == False
+        assert ssh.is_dir('/blabal/vagrant') == False
 
-    #     ssh.put_file()
-    #     ssh.get_file()
-    #     ssh.run()
-    #     ssh.chdir()
-    #     ssh.rmdir()
-    #     ssh.mkdir()
-    #     ssh.contains_dir()
-    #     ssh.contains_file()
+        ssh.chdir('/home')
+        assert ssh.is_dir('vagrant') == True
+        ssh.chdir('~')
+
+        assert ssh.is_file('/home/vagrant/.profile') == True
+        assert ssh.is_file('.profile') == True
+        assert ssh.is_file('blabal') == False
+
+        file_path = testdirectory.write_text(
+            "test.txt", data=u"hello", encoding="utf-8")
+
+        ssh.put_file(local_file=file_path)
+        assert ssh.is_file('test.txt') == True
+
+        ssh.run('echo " vagrant" >> test.txt')
+
+        ssh.get_file('test.txt', testdirectory.path(), rename_as='back.txt')
+        assert testdirectory.contains_file('back.txt')
+
+        ssh.unlink('test.txt')
+        assert ssh.is_file('test.txt') == False
 
 
 OUTPUT_SSHCONFIG = r"""
@@ -138,97 +159,9 @@ Host default
 
 def test_parse_ssh_config():
 
-    result = pytest_vagrant.vagrant.parse_ssh_config(output=OUTPUT_SSHCONFIG)
+    result = pytest_vagrant.parse.to_ssh_config(output=OUTPUT_SSHCONFIG)
 
     assert result.hostname == '127.0.0.1'
     assert result.username == 'vagrant'
     assert result.port == 2222
     assert result.identityfile == '/home/mvp/.pytest_vagrant/private_key'
-
-    # mo
-
-    # vagrant = Vagrant(project="pytest_vagrant",
-    #                   machines_dir=testdirectory.path())
-
-    # vagrant.from_box(box="ubuntu/eoan64", name="pytest_vagrant")
-
-    # def test_vagrantfile(vagrant):
-    #     assert vagrant.vagrant_file() is not None
-
-    # def test_version(vagrant):
-    #     assert vagrant.version() is not None
-
-    # def test_status(vagrant):
-    #     status = vagrant.status
-    #     assert str(status) == "running"
-    #     assert status.running == True
-    #     assert status.not_created == False
-    #     assert status.poweroff == False
-    #     assert status.aborted == False
-    #     assert status.saved == False
-
-    # def test_port(vagrant):
-    #     assert len(vagrant.port()) != 0
-
-    # def test_sshdirectory_path(sshdirectory):
-
-    #     # All subdirectories are create in the ~/pytest_temp and the
-    #     # subdirectories are named after the test-cast e.g. in this
-    #     # case test_sshdirectory_path
-
-    #     assert sshdirectory.getcwd() == '/home/vagrant/pytest_temp/test_sshdirectory_path'
-
-    # def test_sshdirectory_put_file(testdirectory, sshdirectory):
-
-    #     file_path = testdirectory.write_text(
-    #         "test.txt", data=u"hello", encoding="utf-8")
-
-    #     sshdirectory.put_file(local_file=file_path)
-    #     assert sshdirectory.contains_file("test.txt")
-
-    #     sshdirectory.put_file(local_file=file_path, rename_as="ok.txt")
-    #     assert sshdirectory.contains_file("ok.txt")
-
-    # def test_sshdirectory_get_file(testdirectory, sshdirectory):
-    #     test_dir = sshdirectory.mkdir('testdir')
-    #     test_dir.run('touch hello_world.txt')
-
-    #     assert test_dir.contains_file("hello_world.txt")
-
-    #     test_dir.get_file(remote_file="hello_world.txt",
-    #                       local_directory=testdirectory.path())
-
-    #     testdirectory.contains_file("hello_world.txt")
-
-    # def test_sshdirectory_run(sshdirectory):
-    #     test_dir = sshdirectory.mkdir('testdir')
-    #     test_dir.run('touch hello_world.txt')
-
-    #     assert test_dir.contains_file("hello_world.txt")
-
-    #     res = test_dir.run('ls -la')
-    #     res.match(stdout="*hello_world.txt*")
-
-    # def test_sshdirectory_from_path(sshdirectory):
-    #     tmp_dir = sshdirectory.from_path('/tmp')
-    #     assert tmp_dir.getcwd() == '/tmp'
-
-    # def test_sshdirectory_mkdir_rmdir(sshdirectory):
-    #     test_dir = sshdirectory.mkdir('testdir')
-    #     test_dir.run('touch hello')
-
-    #     assert sshdirectory.contains_dir('testdir')
-
-    #     sshdirectory.rmdir('testdir')
-
-    #     assert not sshdirectory.contains_dir('testdir')
-
-    # def test_sshdirectory_rmfile(sshdirectory):
-    #     test_dir = sshdirectory.mkdir('testdir')
-    #     test_dir.run('touch hello_world.txt')
-
-    #     assert test_dir.contains_file("hello_world.txt")
-
-    #     test_dir.rmfile("hello_world.txt")
-
-    #     assert not test_dir.contains_file("hello_world.txt")
