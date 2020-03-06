@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from .vagrant import Vagrant
 from .vagrant import default_machines_dir
 from .machine import Machine
