@@ -3,8 +3,15 @@ from . import parse
 
 
 class Machine(object):
+    """ The virtual machine instance. """
 
     def __init__(self, box, name, slug, cwd, shell, ssh_factory):
+        """ Create a new instance 
+
+        :param box: The Vagrant box to use
+        :param name: The user's chosen name for the machine
+        :param slug: THe 
+
         self.box = box
         self.name = name
         self.slug = slug
