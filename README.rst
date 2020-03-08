@@ -12,7 +12,7 @@ in pytest.
    :local:
 
 Installation
-===========
+============
 
 To install pytest-vagrant::
 
@@ -21,42 +21,21 @@ To install pytest-vagrant::
 Usage
 =====
 
-To make it easy to use in with py.test the Vagrant object can be
+To make it easy to use in with `pytest` the Vagrant object can be
 injected into a test function by using the vagrant fixture.
 
 Example::
 
-    def test_this_function(vagrant):
-        if vagrant.status.not_created:
-            vagrant.up()
+    def test_run_fail(vagrant):
+        machine = vagrant.from_box(
+            box="hashicorp/bionic64", name="pytest_vagrant", reset=False)
+
+        with machine.ssh() as ssh:
+            ssh.run("some_command")
 
 The ``vagrant`` argument is an instance of Vagrant and represents the
 vagrant environment on the machine running the test code.
 
-You can pass your the path to your ``Vagrantfile`` by adding ``--vagrantfile``
-when running py.test e.g.::
-
-    python -m pytest test_directory --vagrantfile ../vagrant
-
-One way to interace with the Vagrant VM is over ssh::
-
-    def test_this_ssh(vagrant):
-
-        with vagrant.ssh() as ssh:
-            stdin, stdout, stderr = ssh.exec_command('ls -la')
-            ...
-
-An even easier way is to use the ``sshdirectory`` fixture for
-running commands and working with files on the host::
-
-    def test_this_dir(sshdirectory):
-
-        testdir = sshdirectory.mkdir('test')
-        testdir.run('touch hello_world.txt')
-        assert testdir.contains_file('hello_world.txt')
-
-        testdir.rmfile('hello_world.txt')
-        assert not testdir.contains_file('hello_world.txt')
 
 Relase new version
 ==================

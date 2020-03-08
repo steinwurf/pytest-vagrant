@@ -1,187 +1,82 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, print_function
-import subprocess
-import re
 import os
 
-from pytest_vagrant.ssh import SSH
-from pytest_vagrant.status import Status
-from pytest_vagrant.utils import walk_up
+from . import machine_status
+from . import parse_format
+from . import parse
+from . import machine
 
-INSTALLED_VERSION_RE = re.compile(r'Installed Version: (\d+\.\d+\.\d+)')
+
+# Vagrant uses the Vagrantfile as configuration file. You can read more
+# about it here:
+# https://www.vagrantup.com/docs/vagrantfile/
+VAGRANTFILE_TEMPLATE = r"""
+Vagrant.configure("2") do |config|
+  config.vm.box = "{box}"
+  config.vm.provider "virtualbox" do |v|
+    v.name = "{name}"
+  end
+end
+""".strip()
+
+
+def default_machines_dir():
+    """ This is where we put the Vagrantfiles and run vagrant commands """
+    # https://stackoverflow.com/a/4028943
+    home_dir = os.path.join(os.path.expanduser("~"))
+    return os.path.join(home_dir, '.pytest_vagrant')
 
 
 class Vagrant(object):
-    """ Vagrant provides access to a virtual machine through vagrant.
+    """ Vagrant provides access to a virtual machine through vagrant."""
 
-    Example:
+    def __init__(self, machine_factory):
+        """ Creates a new Vagrant object
 
-        def test_this_function(vagrant):
-            with vagrant.ssh() as ssh:
-                ssh.put('build/executable', 'test/executable')
-                stdout, stderr = ssh.run('./test/executable')
-                assert 'hello world' in stdout
-    """
+        :param machines_factory: Factory object to build Machine objects
+        """
+        self.machine_factory = machine_factory
 
-    def __init__(self, vagrantfile=None):
+    def from_box(self, box, name, reset=False):
+        """ Create a machine from the specified box.
 
-        if vagrantfile is None:
-            self.cwd = os.getcwd()
-        elif os.path.isfile(vagrantfile):
-            self.cwd = os.path.dirname(vagrantfile)
-        elif os.path.isdir(vagrantfile):
-            self.cwd = vagrantfile
-        else:
-            raise RuntimeError(
-                "Invalid vagrantfile path {}.".format(vagrantfile))
+        :param box: The Vagrant box to use as a string
+        :param name: The name chosen for this machine as a string.
+        :param reset: If true we first restore to the 'reset' snapshot
+        """
 
-        # The command 'vagrant validate' was not introduced until vagrant
-        # version 1.9.4. https://www.hashicorp.com/blog/vagrant-1-9-4
-        #
-        # We should check for the version.
-        version = subprocess.check_output(
-            'vagrant --version', shell=True, cwd=self.cwd)
+        machine = self.machine_factory(box=box, name=name)
 
-        if version < "1.9.4":
-            raise RuntimeError("Vagrant version above or equal to 1.9.4 "
-                               "required. You have {}".format(version))
+        if not os.path.isdir(machine.cwd):
+            os.makedirs(machine.cwd)
+            self._write_vagrantfile(machine)
 
-        try:
-            subprocess.check_output(
-                'vagrant validate', shell=True, cwd=self.cwd)
-        except subprocess.CalledProcessError as e:
-            print("Unable to validate vagrant file, are you sure it exists? "
-                  "Running vagrant validate in {}".format(self.cwd))
-            raise e
+        if machine.status.not_created or machine.status.poweroff:
+            machine.up()
 
-        if self.status.not_created or self.status.poweroff:
-            print("run up")
-            self.up()
-        elif self.status.saved:
-            print("run resume")
-            self.resume()
+        # Is this the first time we boot the machine
+        snapshots = machine.snapshot_list()
 
-        if not self.status.running:
-            raise RuntimeError(
-                "Despite our efforts, the vagrant machine not running")
+        if 'reset' not in snapshots:
+            machine.snapshot_save('reset')
+        elif reset:
 
-    def vagrant_file(self):
-        """Return the Vagrantfile used for the vagrant machine."""
-        for i in walk_up(self.cwd):
-            directory, _, nondirs = i
-            if 'Vagrantfile' in nondirs:
-                return os.path.join(directory, 'Vagrantfile')
+            if 'reset' not in snapshots:
+                raise RuntimeError("Trying to reset without snapshot!")
 
-    @property
-    def status(self):
-        """Return the status of the vagrant machine."""
-        out = subprocess.check_output(
-            'vagrant status', shell=True, cwd=self.cwd)
-        return Status(out)
+            machine.snapshot_restore('reset')
 
-    def ssh(self):
-        """Provide ssh access to the vagrant machine."""
-        if not self.status.running:
-            raise RuntimeError("Vagrant machine not running")
+        return machine
 
-        out = subprocess.check_output(
-            'vagrant ssh-config', shell=True, cwd=self.cwd)
-        return SSH(out)
+    def _write_vagrantfile(self, machine):
+        """ Helper function for writing a Vagrantfile """
 
-    def port(self):
-        """Return a list of port mappings between this and the vagrant machine."""
-        if not self.status.running:
-            raise RuntimeError("Vagrant machine not running")
-        out = subprocess.check_output('vagrant port', shell=True, cwd=self.cwd)
-        matches = re.findall(r'(\d+) \(.*\)\s*=>\s*(\d+)\s*\(.*\)', out)
-        return matches
+        assert os.path.isdir(machine.cwd)
 
-    def provision(self):
-        """Provision the vagrant machine."""
-        if self.status.not_created:
-            raise RuntimeError("Vagrant machine not created")
-        subprocess.check_output('vagrant provision', shell=True, cwd=self.cwd)
+        vagrantfile_path = os.path.join(machine.cwd, "Vagrantfile")
+        assert not os.path.isfile(vagrantfile_path)
 
-    def reload(self):
-        """Reload the Vagrantfile for the vagrant machine."""
-        if self.status.not_created:
-            raise RuntimeError("Vagrant machine not created")
-        subprocess.check_output('vagrant reload', shell=True, cwd=self.cwd)
+        vagrantfile_content = VAGRANTFILE_TEMPLATE.format(
+            name=machine.slug, box=machine.box)
 
-    def ssh_config(self):
-        """Return the ssh-config of the vagrant machine."""
-        if self.status.not_created:
-            raise RuntimeError("Vagrant machine not created")
-        if not self.status.running:
-            raise RuntimeError("Vagrant machine not running")
-        return subprocess.check_output('vagrant ssh-config', shell=True, cwd=self.cwd)
-
-    def reset(self):
-        """ Reset the vagrant box to it's original state. """
-
-        # From https://serverfault.com/a/753801
-        self.destroy()
-        self.up()
-
-    def destroy(self):
-        """Destroy the underlying vagrant machine."""
-        subprocess.check_output(
-            'vagrant destroy --force', shell=True, cwd=self.cwd)
-
-    def halt(self):
-        """Halt the underlying vagrant machine."""
-        subprocess.check_output('vagrant halt', shell=True, cwd=self.cwd)
-
-    def up(self):
-        """Start the underlying vagrant machine."""
-        subprocess.check_output('vagrant up', shell=True, cwd=self.cwd)
-
-    def suspend(self):
-        """Suspend the underlying vagrant machine."""
-        subprocess.check_output('vagrant suspend', shell=True, cwd=self.cwd)
-
-    def resume(self):
-        """Resume the underlying vagrant machine."""
-        if self.status.saved:
-            raise RuntimeError("Vagrant machine not suspended (saved)")
-        subprocess.check_output('vagrant resume', shell=True, cwd=self.cwd)
-
-    def snapshot_list(self):
-        """Return a list of snapshots for the mach."""
-        if self.status.not_created:
-            raise RuntimeError("Vagrant machine not created")
-
-        output = subprocess.check_output(
-            'vagrant snapshot list',
-            shell=True, cwd=self.cwd)
-
-        if 'No snapshots have been taken yet!' in output:
-            return []
-        else:
-            return output.splitlines()
-
-    def snapshot_restore(self, snapshot):
-        """ Restore the machine to a saved snapshot """
-        if not self.status.running:
-            raise RuntimeError("Vagrant machine not running")
-
-        return subprocess.check_output(
-            'vagrant snapshot restore {}'.format(snapshot),
-            shell=True, cwd=self.cwd)
-
-    def snapshot_save(self, snapshot):
-        """ Restore the machine to a saved snapshot """
-        if not self.status.running:
-            raise RuntimeError("Vagrant machine not running")
-
-        return subprocess.check_output(
-            'vagrant snapshot save {}'.format(snapshot),
-            shell=True, cwd=self.cwd)
-
-    def version(self):
-        """Return the version of the vagrant machine."""
-        out = subprocess.check_output(
-            'vagrant version', shell=True, cwd=self.cwd)
-        m = INSTALLED_VERSION_RE.search(out)
-        return m.group(1)
+        with open(vagrantfile_path, 'w') as vagrantfile:
+            vagrantfile.write(vagrantfile_content)

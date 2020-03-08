@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-
-
 class RunResultError(Exception):
-    """Exception for SSHDirctory::run"""
+    """ Exception thrown when running a command fails"""
 
     def __init__(self, runresult):
         super(RunResultError, self).__init__(str(runresult))
