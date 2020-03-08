@@ -6,11 +6,15 @@ class Machine(object):
     """ The virtual machine instance. """
 
     def __init__(self, box, name, slug, cwd, shell, ssh_factory):
-        """ Create a new instance 
+        """ Create a new instance
 
         :param box: The Vagrant box to use
         :param name: The user's chosen name for the machine
-        :param slug: THe 
+        :param slug: A readable idemtifier for the virtual machine
+        :param cwd: The working directory for this machine
+        :param shell: A Shell() instance for running commands
+        :param ssh_factory: A factory object for creating SSH objects
+        """
 
         self.box = box
         self.name = name
@@ -38,7 +42,7 @@ class Machine(object):
         return parse.to_snapshot_list(output=output)
 
     def snapshot_save(self, snapshot):
-        """ Restore the machine to a saved snapshot """
+        """ Save a snapshot of the virtual machine """
         if not self.status.running:
             raise RuntimeError("Vagrant machine not running")
 

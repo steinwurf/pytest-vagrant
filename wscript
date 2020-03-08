@@ -48,11 +48,14 @@ def configure(conf):
 def build(bld):
 
     # Create a virtualenv in the source folder and build universal wheel
-    venv = bld.create_virtualenv(cwd=bld.path.abspath(), overwrite=False)
+    with bld.create_virtualenv() as venv:
 
-    with venv:
-        venv.pip_install(['wheel'])
-        venv.run('python setup.py bdist_wheel --universal')
+        venv.run(cmd='python -m pip install wheel')
+        venv.run(cmd='python setup.py bdist_wheel --universal', cwd=bld.path)
+
+        # Run the unit-tests
+        if bld.options.run_tests:
+            _pytest(bld=bld, venv=venv)
 
     # Delete the egg-info directory, do not understand why this is created
     # when we build a wheel. But, it is - perhaps in the future there will
@@ -61,10 +64,6 @@ def build(bld):
 
     if os.path.isdir(egg_info):
         waflib.extras.wurf.directory.remove_directory(path=egg_info)
-
-    # Run the unit-tests
-    if bld.options.run_tests:
-        _pytest(bld=bld)
 
 
 def _find_wheel(ctx):
@@ -85,15 +84,15 @@ def upload(bld):
 
     venv = bld.create_virtualenv(cwd=bld.bldnode.abspath())
 
-    with venv:
-        venv.pip_install(['twine'])
+    with bld.create_virtualenv() as venv:
+        venv.run('python -m pip install twine')
 
         wheel = _find_wheel(ctx=bld)
 
-        venv.run('python -m twine upload {}'.format(wheel))
+        venv.run(f'python -m twine upload {wheel}')
 
 
-def _pytest(bld):
+def _pytest(bld, venv):
 
     if not bld.env.VAGRANT:
         bld.fatal("Cannot run pytest-vagrant tests without vagrant installed.")
@@ -101,44 +100,46 @@ def _pytest(bld):
     if not bld.env.VBOXMANAGE:
         bld.fatal("Cannot run pytest-vagrant tests without VirtualBox installed.")
 
-    # Create the virtualenv in the build folder to make sure we run
-    # isolated from the sources
-    venv = bld.create_virtualenv(cwd=bld.bldnode.abspath())
-    with venv:
-        # with venv:
-        venv.pip_install(['pytest', 'pytest_testdirectory', 'mock'])
+    # To update the requirements.txt just delete it - a fresh one
+    # will be generated from test/requirements.in
+    if not os.path.isfile('test/requirements.txt'):
+        venv.run('python -m pip install pip-tools')
+        venv.run('pip-compile setup.py test/requirements.in '
+                 '--output-file test/requirements.txt')
 
-        # Install the pytest-vagrant plugin in the virtualenv
-        wheel = _find_wheel(ctx=bld)
+    venv.run('python -m pip install -r test/requirements.txt')
 
-        venv.run('python -m pip install {}'.format(wheel))
+    # Install the pytest-vagrant plugin in the virtualenv
+    wheel = _find_wheel(ctx=bld)
 
-        # Added our systems path to the virtualenv (otherwise we cannot
-        # find vagrant)
-        venv.env['PATH'] = os.path.pathsep.join(
-            [venv.env['PATH'], os.environ['PATH']])
+    venv.run(f'python -m pip install {wheel}')
 
-        # We override the pytest temp folder with the basetemp option,
-        # so the test folders will be available at the specified location
-        # on all platforms. The default location is the "pytest" local folder.
-        basetemp = os.path.abspath(os.path.expanduser(
-            bld.options.pytest_basetemp))
+    # Added our systems path to the virtualenv (otherwise we cannot
+    # find vagrant)
+    venv.env['PATH'] = os.path.pathsep.join(
+        [venv.env['PATH'], os.environ['PATH']])
 
-        # We need to manually remove the previously created basetemp folder,
-        # because pytest uses os.listdir in the removal process, and that fails
-        # if there are any broken symlinks in that folder.
-        if os.path.exists(basetemp):
-            waflib.extras.wurf.directory.remove_directory(path=basetemp)
+    # We override the pytest temp folder with the basetemp option,
+    # so the test folders will be available at the specified location
+    # on all platforms. The default location is the "pytest" local folder.
+    basetemp = os.path.abspath(os.path.expanduser(
+        bld.options.pytest_basetemp))
 
-        testdir = bld.path.find_node('test')
+    # We need to manually remove the previously created basetemp folder,
+    # because pytest uses os.listdir in the removal process, and that fails
+    # if there are any broken symlinks in that folder.
+    if os.path.exists(basetemp):
+        waflib.extras.wurf.directory.remove_directory(path=basetemp)
 
-        # Make python not write any .pyc files. These may linger around
-        # in the file system and make some tests pass although their .py
-        # counter-part has been e.g. deleted
-        command = 'python -B -m pytest {} --basetemp {}'.format(
-            testdir.abspath(), basetemp)
+    # Run all tests by just passing the test directory. Specific tests can
+    # be enabled by specifying the full path e.g.:
+    #
+    #     'test/test_run.py::test_create_context'
+    #
+    test_filter = 'test'
 
-        if bld.options.verbose:
-            command += " --capture=no"
+    # Main test command
+    venv.run(f'python -B -m pytest {test_filter} --basetemp {basetemp}')
 
-        venv.run(command)
+    # Check the package
+    venv.run(f'twine check {wheel}')

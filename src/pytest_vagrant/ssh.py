@@ -2,17 +2,11 @@
 import re
 import os
 import stat
+import paramiko
 
-from paramiko import SSHClient, AutoAddPolicy
-
-import pytest_vagrant
-
-
-class SSHConnection(object):
-    def __init__(self, ssh_client, sftp, cwd):
-        self.ssh_client = ssh_client
-        self.sftp = sftp
-        self.cwd = cwd
+from . import ssh_connection
+from . import runresult
+from . import errors
 
 
 class SSH(object):
@@ -28,8 +22,8 @@ class SSH(object):
 
         assert self.connection is None
 
-        ssh_client = SSHClient()
-        ssh_client.set_missing_host_key_policy(AutoAddPolicy())
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh_client.connect(
             hostname=self.ssh_config.hostname,
             port=self.ssh_config.port,
@@ -40,9 +34,9 @@ class SSH(object):
 
         # Get home dir
         _, stdout, _ = ssh_client.exec_command("cd ~;pwd")
-        cwd = stdout.read().strip()
+        cwd = stdout.readline().strip()
 
-        self.connection = SSHConnection(
+        self.connection = ssh_connection.SSHConnection(
             ssh_client=ssh_client, sftp=sftp, cwd=cwd)
 
     def close(self):
@@ -70,19 +64,24 @@ class SSH(object):
         # Make sure we are in the right directory
         command = "cd " + cwd + ";" + command
 
+        print(type(cwd))
+        print(type(command))
+
         _, stdout, stderr = self.connection.ssh_client.exec_command(
             command)
+
+        print(type(stdout))
 
         return_code = stdout.channel.recv_exit_status()
         stdout = ''.join(stdout.readlines())
         stderr = ''.join(stderr.readlines())
 
-        result = pytest_vagrant.RunResult(
+        result = runresult.RunResult(
             command=command, cwd=cwd,
             stdout=stdout, stderr=stderr, returncode=return_code)
 
         if result.returncode:
-            raise pytest_vagrant.RunResultError(runresult=result)
+            raise errors.RunResultError(runresult=result)
 
         return result
 
@@ -173,7 +172,6 @@ class SSH(object):
 
     def __enter__(self):
         """Use SSH with the with statement."""
-        print("__enter__")
         self.open()
         return self
 

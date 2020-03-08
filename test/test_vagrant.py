@@ -2,6 +2,7 @@ import os
 import mock
 import csv
 import re
+import pytest
 
 import pytest_vagrant
 
@@ -141,6 +142,15 @@ def test_run(vagrant, testdirectory):
 
         ssh.unlink('test.txt')
         assert ssh.is_file('test.txt') == False
+
+
+def test_run_fail(vagrant):
+    machine = vagrant.from_box(
+        box="hashicorp/bionic64", name="pytest_vagrant", reset=False)
+
+    with machine.ssh() as ssh:
+        with pytest.raises(pytest_vagrant.RunResultError):
+            ssh.run("some_nonexisting_cmd")
 
 
 OUTPUT_SSHCONFIG = r"""

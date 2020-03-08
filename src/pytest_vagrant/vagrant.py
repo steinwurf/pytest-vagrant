@@ -27,23 +27,12 @@ def default_machines_dir():
 
 
 class Vagrant(object):
-    """ Vagrant provides access to a virtual machine through vagrant.
-
-    Example:
-
-        def test_this_function(vagrant):
-            with vagrant.ssh() as ssh:
-                ssh.put('build/executable', 'test/executable')
-                stdout, stderr = ssh.run('./test/executable')
-                assert 'hello world' in stdout
-    """
+    """ Vagrant provides access to a virtual machine through vagrant."""
 
     def __init__(self, machine_factory):
         """ Creates a new Vagrant object
 
-        :param
-        :param machines_dir: The machines_dir to where the Vagrantfiles and vagrant commands
-                     will run.
+        :param machines_factory: Factory object to build Machine objects
         """
         self.machine_factory = machine_factory
 
@@ -52,6 +41,7 @@ class Vagrant(object):
 
         :param box: The Vagrant box to use as a string
         :param name: The name chosen for this machine as a string.
+        :param reset: If true we first restore to the 'reset' snapshot
         """
 
         machine = self.machine_factory(box=box, name=name)
@@ -78,6 +68,7 @@ class Vagrant(object):
         return machine
 
     def _write_vagrantfile(self, machine):
+        """ Helper function for writing a Vagrantfile """
 
         assert os.path.isdir(machine.cwd)
 
