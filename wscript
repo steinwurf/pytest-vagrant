@@ -82,8 +82,6 @@ def _find_wheel(ctx):
 def upload(bld):
     """ Upload the built wheel to PyPI (the Python Package Index) """
 
-    venv = bld.create_virtualenv(cwd=bld.bldnode.abspath())
-
     with bld.create_virtualenv() as venv:
         venv.run('python -m pip install twine')
 
