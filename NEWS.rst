@@ -6,6 +6,7 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Remove some left over print statements
 * Patch: Fix waf PYPI upload.
 
 2.0.0

@@ -47,6 +47,7 @@ setup(
     version=VERSION,
     description=('A py.test plugin providing access to vagrant.'),
     long_description=long_description,
+    long_description_content_type='text/x-rst',
     url='https://github.com/steinwurf/pytest-vagrant',
     author='Steinwurf ApS',
     author_email='contact@steinwurf.com',

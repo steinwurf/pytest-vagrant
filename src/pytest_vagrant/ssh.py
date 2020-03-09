@@ -64,13 +64,8 @@ class SSH(object):
         # Make sure we are in the right directory
         command = "cd " + cwd + ";" + command
 
-        print(type(cwd))
-        print(type(command))
-
         _, stdout, stderr = self.connection.ssh_client.exec_command(
             command)
-
-        print(type(stdout))
 
         return_code = stdout.channel.recv_exit_status()
         stdout = ''.join(stdout.readlines())
