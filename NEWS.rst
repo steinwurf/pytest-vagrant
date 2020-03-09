@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+2.0.1
+-----
 * Patch: Remove some left over print statements
 * Patch: Fix waf PYPI upload.
 
