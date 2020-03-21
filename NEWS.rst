@@ -8,6 +8,10 @@ Latest
 ------
 * Patch: Run vagrant global-status --prune to make sure vagrant
   does not use stale information.
+
+2.0.1
+-----
+* Patch: Remove some left over print statements
 * Patch: Fix waf PYPI upload.
 
 2.0.0
