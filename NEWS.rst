@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+2.0.2
+-----
 * Patch: Run vagrant global-status --prune to make sure vagrant
   does not use stale information.
 
