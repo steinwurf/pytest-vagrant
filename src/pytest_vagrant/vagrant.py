@@ -29,12 +29,14 @@ def default_machines_dir():
 class Vagrant(object):
     """ Vagrant provides access to a virtual machine through vagrant."""
 
-    def __init__(self, machine_factory):
+    def __init__(self, machine_factory, shell):
         """ Creates a new Vagrant object
 
         :param machines_factory: Factory object to build Machine objects
+        :param shell: A Shell object for running commands
         """
         self.machine_factory = machine_factory
+        self.shell = shell
 
     def from_box(self, box, name, reset=False):
         """ Create a machine from the specified box.
@@ -43,6 +45,9 @@ class Vagrant(object):
         :param name: The name chosen for this machine as a string.
         :param reset: If true we first restore to the 'reset' snapshot
         """
+
+        # Prune Vagrant's state to ensure we have no stale info
+        self.shell.run(cmd="vagrant global-status --prune", cwd=None)
 
         machine = self.machine_factory(box=box, name=name)
 

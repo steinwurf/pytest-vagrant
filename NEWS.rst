@@ -6,6 +6,8 @@ of every change, see the Git log.
 
 Latest
 ------
+* Patch: Run vagrant global-status --prune to make sure vagrant
+  does not use stale information.
 * Patch: Fix waf PYPI upload.
 
 2.0.0
