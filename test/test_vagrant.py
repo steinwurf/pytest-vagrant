@@ -153,6 +153,22 @@ def test_run_fail(vagrant):
             ssh.run("some_nonexisting_cmd")
 
 
+UBUNTU_TWEAK = """
+v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
+""".strip()
+
+
+def test_run_ubuntu(vagrant):
+    machine = vagrant.from_box(
+        box="ubuntu/eoan64", name="pytest_vagrant", reset=False)
+
+    vagrantfile = os.path.join(machine.cwd, 'Vagrantfile')
+
+    # Check that we our Ubuntu Vagrantfile template
+    with open(vagrantfile) as f:
+        assert UBUNTU_TWEAK in f.read()
+
+
 OUTPUT_SSHCONFIG = r"""
 Host default
   HostName 127.0.0.1

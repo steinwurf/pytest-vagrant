@@ -9,9 +9,26 @@ from . import machine
 # Vagrant uses the Vagrantfile as configuration file. You can read more
 # about it here:
 # https://www.vagrantup.com/docs/vagrantfile/
+VAGRANTFILE_TEMPLATE_UBUNTU = r"""
+Vagrant.configure("2") do |config|
+  config.vm.box = "{box}"
+  # We use SSH not shared folders to talk with the VM
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+  config.vm.provider "virtualbox" do |v|
+    # Log file was removed in newer version of ubuntu cloud images
+    # so we have to disconnect the uart otherwise boot is very slow
+    # https://bugs.launchpad.net/cloud-images/+bug/1829625
+    v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
+    v.name = "{name}"
+  end
+end
+""".strip()
+
 VAGRANTFILE_TEMPLATE = r"""
 Vagrant.configure("2") do |config|
   config.vm.box = "{box}"
+  # We use SSH not shared folders to talk with the VM
+  config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provider "virtualbox" do |v|
     v.name = "{name}"
   end
@@ -80,8 +97,12 @@ class Vagrant(object):
         vagrantfile_path = os.path.join(machine.cwd, "Vagrantfile")
         assert not os.path.isfile(vagrantfile_path)
 
-        vagrantfile_content = VAGRANTFILE_TEMPLATE.format(
-            name=machine.slug, box=machine.box)
+        if "ubuntu" in machine.box:
+            vagrantfile_content = VAGRANTFILE_TEMPLATE_UBUNTU.format(
+                name=machine.slug, box=machine.box)
+        else:
+            vagrantfile_content = VAGRANTFILE_TEMPLATE.format(
+                name=machine.slug, box=machine.box)
 
         with open(vagrantfile_path, 'w') as vagrantfile:
             vagrantfile.write(vagrantfile_content)
