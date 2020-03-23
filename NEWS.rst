@@ -6,6 +6,10 @@ of every change, see the Git log.
 
 Latest
 ------
+* tbd
+
+2.0.3
+-----
 * Patch: Fix Ubuntu slow boot.
 * Patch: Remove synched folders.
 
