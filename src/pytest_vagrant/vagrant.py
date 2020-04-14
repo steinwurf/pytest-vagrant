@@ -1,9 +1,11 @@
 import os
+import json
 
-from . import machine_status
-from . import parse_format
-from . import parse
-from . import machine
+from .machine_factory import MachineFactory
+from .cloud_factory import CloudFactory
+from .shell import Shell
+from .log import setup_logging
+from .ssh import SSH
 
 
 # Vagrant uses the Vagrantfile as configuration file. You can read more
@@ -43,13 +45,31 @@ def default_machines_dir():
     return os.path.join(home_dir, '.pytest_vagrant')
 
 
+def make_vagrant():
+    """ Creates a new Vagrant object """
+    log = setup_logging(verbose=False)
+
+    shell = Shell(log=log)
+    machines_dir = default_machines_dir()
+
+    machine_factory = MachineFactory(
+        shell=shell, machines_dir=machines_dir, ssh_factory=SSH,
+        log=log)
+
+    cloud_factory = CloudFactory(shell=shell)
+
+    return Vagrant(machine_factory=machine_factory,
+                   cloud_factory=cloud_factory, shell=shell)
+
+
 class Vagrant(object):
     """ Vagrant provides access to a virtual machine through vagrant."""
 
-    def __init__(self, machine_factory, shell):
+    def __init__(self, machine_factory, cloud_factory, shell):
         """ Creates a new Vagrant object
 
         :param machines_factory: Factory object to build Machine objects
+        :param cloud_factory: Factory object to build Cloud objects
         :param shell: A Shell object for running commands
         """
         self.machine_factory = machine_factory
@@ -88,6 +108,10 @@ class Vagrant(object):
             machine.snapshot_restore('reset')
 
         return machine
+
+    def cloud(self):
+        """ Work with the Vagrant cloud """
+        return self.cloud_factory()
 
     def _write_vagrantfile(self, machine):
         """ Helper function for writing a Vagrantfile """

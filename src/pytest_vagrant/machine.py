@@ -1,3 +1,5 @@
+import tempfile
+import os
 
 from . import parse
 
@@ -5,7 +7,7 @@ from . import parse
 class Machine(object):
     """ The virtual machine instance. """
 
-    def __init__(self, box, name, slug, cwd, shell, ssh_factory):
+    def __init__(self, box, name, slug, cwd, shell, ssh_factory, log):
         """ Create a new instance
 
         :param box: The Vagrant box to use
@@ -14,6 +16,7 @@ class Machine(object):
         :param cwd: The working directory for this machine
         :param shell: A Shell() instance for running commands
         :param ssh_factory: A factory object for creating SSH objects
+        :param log: A logging object
         """
 
         self.box = box
@@ -22,6 +25,7 @@ class Machine(object):
         self.cwd = cwd
         self.shell = shell
         self.ssh_factory = ssh_factory
+        self.log = log
 
     @property
     def status(self):
@@ -77,3 +81,24 @@ class Machine(object):
     def up(self):
         """Start the underlying vagrant machine."""
         self.shell.run(cmd='vagrant up', cwd=self.cwd)
+
+    def package(self, output=None, overwrite=True):
+        """ Packages the current machine into a reusable box
+
+        :param output: The box file e.g. /tmp/my.box. If not specified the
+            default /tmp/package.box will be used
+        :param overwrite: If True any existing box file with the same name will
+            first be deleted.
+        :return: The path to the resulting box file
+        """
+
+        if not output:
+            output = os.path.join(tempfile.gettempdir(), 'package.box')
+
+        if overwrite and os.path.isfile(output):
+            os.unlink(output)
+
+        self.shell.run(
+            cmd='vagrant package --output {}'.format(output), cwd=self.cwd)
+
+        return output
