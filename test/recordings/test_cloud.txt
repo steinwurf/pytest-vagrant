@@ -1,0 +1,3 @@
+[call.run(cmd='vagrant login --token sdafa'),
+ call.run(cmd='vagrant cloud publish test/test 1.0.0 virtualbox /tmp/test.box --release --force'),
+ call.run(cmd='vagrant login --logout')]

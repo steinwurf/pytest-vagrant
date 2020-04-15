@@ -191,3 +191,19 @@ def test_parse_ssh_config():
     assert result.username == 'vagrant'
     assert result.port == 2222
     assert result.identityfile == '/home/mvp/.pytest_vagrant/private_key'
+
+
+def test_cloud(datarecorder):
+
+    shell = mock.Mock()
+    cloud_factory = pytest_vagrant.CloudFactory(shell=shell)
+    vagrant = pytest_vagrant.Vagrant(machine_factory=None,
+                                     cloud_factory=cloud_factory, shell=None)
+
+    with vagrant.cloud(token='sdafa') as cloud:
+        cloud.publish_box(box_tag='test/test', box_version='1.0.0',
+                          provider='virtualbox', box_file='/tmp/test.box')
+
+    datarecorder.record_data(
+        data=str(shell.mock_calls),
+        recording_file='test/recordings/test_cloud.txt')

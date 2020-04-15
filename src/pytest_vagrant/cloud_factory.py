@@ -8,5 +8,5 @@ class CloudFactory(object):
     def __init__(self, shell):
         self.shell = shell
 
-    def __call__(self):
-        return cloud.Cloud(shell=self.shell)
+    def __call__(self, token):
+        return cloud.Cloud(token=token, shell=self.shell)

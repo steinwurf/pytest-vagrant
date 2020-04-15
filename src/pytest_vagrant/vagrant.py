@@ -73,6 +73,7 @@ class Vagrant(object):
         :param shell: A Shell object for running commands
         """
         self.machine_factory = machine_factory
+        self.cloud_factory = cloud_factory
         self.shell = shell
 
     def from_box(self, box, name, reset=False):
@@ -109,9 +110,11 @@ class Vagrant(object):
 
         return machine
 
-    def cloud(self):
-        """ Work with the Vagrant cloud """
-        return self.cloud_factory()
+    def cloud(self, token=None):
+        """ Work with the Vagrant cloud
+
+        """
+        return self.cloud_factory(token=token)
 
     def _write_vagrantfile(self, machine):
         """ Helper function for writing a Vagrantfile """
