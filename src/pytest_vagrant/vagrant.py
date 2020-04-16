@@ -17,11 +17,18 @@ Vagrant.configure("2") do |config|
   # We use SSH not shared folders to talk with the VM
   config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provider "virtualbox" do |v|
+
+  {% if 'ubuntu' in box %}
     # Log file was removed in newer version of ubuntu cloud images
     # so we have to disconnect the uart otherwise boot is very slow
     # https://bugs.launchpad.net/cloud-images/+bug/1829625
     v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
-    v.name = "{name}"
+  {% endif %}
+
+  v.name = "{name}"
+
+
+
   end
 end
 """.strip()
