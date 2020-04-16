@@ -134,7 +134,7 @@ def _pytest(bld, venv):
     #
     #     'test/test_run.py::test_create_context'
     #
-    test_filter = 'test'
+    test_filter = 'test/test_vagrantfile.py'
 
     # Main test command
     venv.run(f'python -B -m pytest {test_filter} --basetemp {basetemp}')

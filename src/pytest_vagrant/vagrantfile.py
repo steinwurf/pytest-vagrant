@@ -25,8 +25,8 @@ end
 """.strip()
 
 
-class VagrantFile(object):
-    """ VagrantFile can write a vagrant file for a specific machine"""
+class Vagrantfile(object):
+    """ Vagrantfile can write a vagrant file for a specific machine"""
 
     def write(self, box, box_version, name, cwd):
         """ Create a machine from the specified box.
@@ -38,7 +38,7 @@ class VagrantFile(object):
             written
         """
 
-        vagrantfile = os.path.join(cwd, 'VagrantFile')
+        vagrantfile = os.path.join(cwd, 'Vagrantfile')
 
         template = jinja2.Template(VAGRANTFILE_TEMPLATE)
 

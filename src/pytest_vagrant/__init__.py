@@ -11,3 +11,4 @@ from .runresult import RunResult
 from .errors import RunResultError
 from .errors import MatchError
 from .log import setup_logging
+from .vagrantfile import Vagrantfile
