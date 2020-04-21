@@ -15,7 +15,9 @@ docutils==0.16            # via readme-renderer
 idna==2.9                 # via requests
 importlib-metadata==1.6.0  # via keyring, pluggy, pytest, twine
 jeepney==0.4.3            # via keyring, secretstorage
+jinja2==2.11.2            # via pytest-vagrant (setup.py)
 keyring==21.2.0           # via twine
+markupsafe==1.1.1         # via jinja2
 mock==4.0.2               # via -r test/requirements.in
 more-itertools==8.2.0     # via pytest
 packaging==20.3           # via pytest
@@ -27,7 +29,7 @@ pycparser==2.20           # via cffi
 pygments==2.6.1           # via readme-renderer
 pynacl==1.3.0             # via paramiko
 pyparsing==2.4.7          # via packaging
-pytest-datarecorder==1.2.0  # via -r test/requirements.in
+pytest-datarecorder==1.3.0  # via -r test/requirements.in
 pytest-testdirectory==3.1.0  # via -r test/requirements.in
 pytest==5.4.1             # via -r test/requirements.in, pytest-datarecorder, pytest-testdirectory, pytest-vagrant (setup.py)
 python-slugify==4.0.0     # via pytest-vagrant (setup.py)
@@ -39,7 +41,7 @@ six==1.14.0               # via bcrypt, bleach, cryptography, packaging, pynacl,
 text-unidecode==1.3       # via python-slugify
 tqdm==4.45.0              # via twine
 twine==3.1.1              # via -r test/requirements.in
-urllib3==1.25.8           # via requests
+urllib3==1.25.9           # via requests
 wcwidth==0.1.9            # via pytest
 webencodings==0.5.1       # via bleach
 zipp==3.1.0               # via importlib-metadata
