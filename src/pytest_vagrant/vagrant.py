@@ -4,45 +4,9 @@ import json
 from .machine_factory import MachineFactory
 from .cloud_factory import CloudFactory
 from .shell import Shell
+from .vagrantfile import Vagrantfile
 from .log import setup_logging
 from .ssh import SSH
-
-
-# Vagrant uses the Vagrantfile as configuration file. You can read more
-# about it here:
-# https://www.vagrantup.com/docs/vagrantfile/
-VAGRANTFILE_TEMPLATE_UBUNTU = r"""
-Vagrant.configure("2") do |config|
-  config.vm.box = "{box}"
-  # We use SSH not shared folders to talk with the VM
-  config.vm.synced_folder '.', '/vagrant', disabled: true
-  config.vm.provider "virtualbox" do |v|
-
-  {% if 'ubuntu' in box %}
-    # Log file was removed in newer version of ubuntu cloud images
-    # so we have to disconnect the uart otherwise boot is very slow
-    # https://bugs.launchpad.net/cloud-images/+bug/1829625
-    v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
-  {% endif %}
-
-  v.name = "{name}"
-
-
-
-  end
-end
-""".strip()
-
-VAGRANTFILE_TEMPLATE = r"""
-Vagrant.configure("2") do |config|
-  config.vm.box = "{box}"
-  # We use SSH not shared folders to talk with the VM
-  config.vm.synced_folder '.', '/vagrant', disabled: true
-  config.vm.provider "virtualbox" do |v|
-    v.name = "{name}"
-  end
-end
-""".strip()
 
 
 def default_machines_dir():
@@ -64,30 +28,36 @@ def make_vagrant():
         log=log)
 
     cloud_factory = CloudFactory(shell=shell)
+    vagrantfile = Vagrantfile()
 
     return Vagrant(machine_factory=machine_factory,
-                   cloud_factory=cloud_factory, shell=shell)
+                   cloud_factory=cloud_factory, shell=shell,
+                   vagrantfile=vagrantfile)
 
 
 class Vagrant(object):
     """ Vagrant provides access to a virtual machine through vagrant."""
 
-    def __init__(self, machine_factory, cloud_factory, shell):
+    def __init__(self, machine_factory, cloud_factory, shell, vagrantfile):
         """ Creates a new Vagrant object
 
         :param machines_factory: Factory object to build Machine objects
         :param cloud_factory: Factory object to build Cloud objects
         :param shell: A Shell object for running commands
+        :param vagrantfile: A Vagrantfile object
         """
         self.machine_factory = machine_factory
         self.cloud_factory = cloud_factory
         self.shell = shell
+        self.vagrantfile = vagrantfile
 
-    def from_box(self, box, name, reset=False):
+    def from_box(self, name, box, box_version=None, reset=False):
         """ Create a machine from the specified box.
 
-        :param box: The Vagrant box to use as a string
         :param name: The name chosen for this machine as a string.
+        :param box: The Vagrant box to use as a string
+        :param box_version: The version of the box to use or None if no
+            version
         :param reset: If true we first restore to the 'reset' snapshot
         """
 
@@ -98,7 +68,9 @@ class Vagrant(object):
 
         if not os.path.isdir(machine.cwd):
             os.makedirs(machine.cwd)
-            self._write_vagrantfile(machine)
+            self.vagrantfile.write(
+                name=machine.slug, box=box, box_version=box_version,
+                cwd=machine.cwd)
 
         if machine.status.not_created or machine.status.poweroff:
             machine.up()
@@ -122,21 +94,3 @@ class Vagrant(object):
 
         """
         return self.cloud_factory(token=token)
-
-    def _write_vagrantfile(self, machine):
-        """ Helper function for writing a Vagrantfile """
-
-        assert os.path.isdir(machine.cwd)
-
-        vagrantfile_path = os.path.join(machine.cwd, "Vagrantfile")
-        assert not os.path.isfile(vagrantfile_path)
-
-        if "ubuntu" in machine.box:
-            vagrantfile_content = VAGRANTFILE_TEMPLATE_UBUNTU.format(
-                name=machine.slug, box=machine.box)
-        else:
-            vagrantfile_content = VAGRANTFILE_TEMPLATE.format(
-                name=machine.slug, box=machine.box)
-
-        with open(vagrantfile_path, 'w') as vagrantfile:
-            vagrantfile.write(vagrantfile_content)

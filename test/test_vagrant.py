@@ -195,10 +195,12 @@ def test_parse_ssh_config():
 
 def test_cloud(datarecorder):
 
+    vagrantfile = mock.Mock()
     shell = mock.Mock()
     cloud_factory = pytest_vagrant.CloudFactory(shell=shell)
-    vagrant = pytest_vagrant.Vagrant(machine_factory=None,
-                                     cloud_factory=cloud_factory, shell=None)
+    vagrant = pytest_vagrant.Vagrant(
+        machine_factory=None, cloud_factory=cloud_factory, shell=None,
+        vagrantfile=vagrantfile)
 
     with vagrant.cloud(token='sdafa') as cloud:
         cloud.publish_box(box_tag='test/test', box_version='1.0.0',

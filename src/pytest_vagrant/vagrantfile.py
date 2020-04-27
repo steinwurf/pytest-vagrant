@@ -32,12 +32,13 @@ end
 class Vagrantfile(object):
     """ Vagrantfile can write a vagrant file for a specific machine"""
 
-    def write(self, box, box_version, name, cwd):
+    def write(self, name, box, box_version, cwd):
         """ Create a machine from the specified box.
 
-        :param box: The Vagrant box to use as a string
-        :param box_version: The version of the box to use
         :param name: The name chosen for this machine as a string.
+        :param box: The Vagrant box to use as a string
+        :param box_version: The version of the box to use or None if no
+            version
         :param cwd: The working directory where the Vagrant file should be
             written
         """
