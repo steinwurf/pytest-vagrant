@@ -2,7 +2,7 @@ import os
 import json
 
 from . import ssh_connection
-from . import runresult
+from . import run_result
 from . import errors
 
 

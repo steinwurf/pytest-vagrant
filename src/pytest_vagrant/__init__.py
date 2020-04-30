@@ -7,7 +7,7 @@ from .cloud_factory import CloudFactory
 from .cloud import Cloud
 from .shell import Shell
 from .ssh import SSH
-from .runresult import RunResult
+from .run_result import RunResult
 from .errors import RunResultError
 from .errors import MatchError
 from .log import setup_logging
