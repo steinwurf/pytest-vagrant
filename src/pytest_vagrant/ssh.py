@@ -5,7 +5,7 @@ import stat
 import paramiko
 
 from . import ssh_connection
-from . import runresult
+from . import run_result
 from . import errors
 
 
@@ -71,7 +71,7 @@ class SSH(object):
         stdout = ''.join(stdout.readlines())
         stderr = ''.join(stderr.readlines())
 
-        result = runresult.RunResult(
+        result = run_result.RunResult(
             command=command, cwd=cwd,
             stdout=stdout, stderr=stderr, returncode=return_code)
 

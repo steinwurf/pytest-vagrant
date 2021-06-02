@@ -69,7 +69,7 @@ setup(
               'testing unit tests plugin vagrant'),
     packages=find_packages(where='src', exclude=['test']),
     package_dir={"": "src"},
-    install_requires=['pytest', 'paramiko', 'python-slugify'],
+    install_requires=['pytest', 'paramiko', 'python-slugify', 'jinja2'],
     entry_points={
         'pytest11': ['vagrant = pytest_vagrant.fixtures'],
     },

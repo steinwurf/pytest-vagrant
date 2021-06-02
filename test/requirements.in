@@ -1,4 +1,5 @@
 pytest
 pytest_testdirectory
+pytest_datarecorder
 mock
 twine

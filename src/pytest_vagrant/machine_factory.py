@@ -8,18 +8,20 @@ from . import machine
 class MachineFactory(object):
     """ Factory object for building Machine objects """
 
-    def __init__(self, shell, machines_dir, ssh_factory):
+    def __init__(self, shell, machines_dir, ssh_factory, log):
         """ Instantiate a new object
 
         :param shell: A Shell object for running commands
         :param machines_dir: The directory where we store the Vagrantfiles and
             where Vagrant stores information about the created virtual machines
         :param ssh_factory: Factory for building SSH objects
+        :param log: A logging object
         """
 
         self.shell = shell
         self.machines_dir = machines_dir
         self.ssh_factory = ssh_factory
+        self.log = log
 
     def __call__(self, box, name):
         """ Build a new Machine object.
@@ -34,4 +36,4 @@ class MachineFactory(object):
 
         return machine.Machine(
             name=name, box=box, slug=slug, cwd=cwd, shell=self.shell,
-            ssh_factory=self.ssh_factory)
+            ssh_factory=self.ssh_factory, log=self.log)
