@@ -32,7 +32,7 @@ def _test_vagrant_from_box(testdirectory):
 
     vagrant = pytest_vagrant.Vagrant(machine_factory=machine_factory)
 
-    machine = vagrant.from_box(box="ubuntu/eoan64", name="pytest_vagrant")
+    machine = vagrant.from_box(box="ubuntu/focal64", name="pytest_vagrant")
 
     print(str(machine.mock_calls))
 
@@ -159,7 +159,7 @@ v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
 
 
 def test_run_ubuntu(vagrant):
-    machine = vagrant.from_box(box="ubuntu/eoan64", name="pytest_vagrant", reset=False)
+    machine = vagrant.from_box(box="ubuntu/focal64", name="pytest_vagrant", reset=False)
 
     vagrantfile = os.path.join(machine.cwd, "Vagrantfile")
 
