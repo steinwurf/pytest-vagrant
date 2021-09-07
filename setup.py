@@ -22,11 +22,11 @@ with io.open(os.path.join(cwd, "wscript"), encoding="utf-8") as fd:
         =               #    Match and equal sign
         \s*             #    Match zero or more spaces
     )                   # End group
-    '                   # Match '
+    "                   # Match "
     (                   # Group and match
          \d+\.\d+\.\d+  #    Match digit(s).digit(s).digit(s) e.g. 10.2.3
     )                   # End of group
-    '                   # Match '
+    "                   # Match "
     """,
         re.VERBOSE,
     )
