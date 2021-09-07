@@ -1,16 +1,16 @@
-
 from . import parse
 
 
 class Machine(object):
-    """ The virtual machine instance. """
+    """The virtual machine instance."""
 
-    def __init__(self, box, name, slug, cwd, shell, ssh_factory):
-        """ Create a new instance
+    def __init__(self, box, name, version, slug, cwd, shell, ssh_factory):
+        """Create a new instance
 
         :param box: The Vagrant box to use
         :param name: The user's chosen name for the machine
-        :param slug: A readable idemtifier for the virtual machine
+        :param version: The version of the box to use
+        :param slug: A readable identifier for the virtual machine
         :param cwd: The working directory for this machine
         :param shell: A Shell() instance for running commands
         :param ssh_factory: A factory object for creating SSH objects
@@ -18,6 +18,7 @@ class Machine(object):
 
         self.box = box
         self.name = name
+        self.version = version
         self.slug = slug
         self.cwd = cwd
         self.shell = shell
@@ -26,8 +27,7 @@ class Machine(object):
     @property
     def status(self):
         """Return the status of the Vagrant machine."""
-        output = self.shell.run(
-            cmd='vagrant status --machine-readable', cwd=self.cwd)
+        output = self.shell.run(cmd="vagrant status --machine-readable", cwd=self.cwd)
 
         return parse.to_status(output=output)
 
@@ -37,25 +37,24 @@ class Machine(object):
             raise RuntimeError("Vagrant machine not created")
 
         output = self.shell.run(
-            cmd='vagrant snapshot list --machine-readable', cwd=self.cwd)
+            cmd="vagrant snapshot list --machine-readable", cwd=self.cwd
+        )
 
         return parse.to_snapshot_list(output=output)
 
     def snapshot_save(self, snapshot):
-        """ Save a snapshot of the virtual machine """
+        """Save a snapshot of the virtual machine"""
         if not self.status.running:
             raise RuntimeError("Vagrant machine not running")
 
-        self.shell.run(cmd='vagrant snapshot save {}'.format(
-            snapshot), cwd=self.cwd)
+        self.shell.run(cmd="vagrant snapshot save {}".format(snapshot), cwd=self.cwd)
 
     def snapshot_restore(self, snapshot):
-        """ Restore the machine to a saved snapshot """
+        """Restore the machine to a saved snapshot"""
         if not self.status.running:
             raise RuntimeError("Vagrant machine not running")
 
-        self.shell.run(cmd='vagrant snapshot restore {}'.format(
-            snapshot), cwd=self.cwd)
+        self.shell.run(cmd="vagrant snapshot restore {}".format(snapshot), cwd=self.cwd)
 
     def ssh_config(self):
         """Return the ssh-config of the vagrant machine."""
@@ -64,7 +63,7 @@ class Machine(object):
         if not self.status.running:
             raise RuntimeError("Vagrant machine not running")
 
-        output = self.shell.run('vagrant ssh-config', cwd=self.cwd)
+        output = self.shell.run("vagrant ssh-config", cwd=self.cwd)
         return parse.to_ssh_config(output=output)
 
     def ssh(self):
@@ -76,4 +75,4 @@ class Machine(object):
 
     def up(self):
         """Start the underlying vagrant machine."""
-        self.shell.run(cmd='vagrant up', cwd=self.cwd)
+        self.shell.run(cmd="vagrant up", cwd=self.cwd)

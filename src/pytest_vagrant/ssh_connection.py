@@ -1,8 +1,8 @@
 class SSHConnection(object):
-    """ An active SSH connection """
+    """An active SSH connection"""
 
     def __init__(self, ssh_client, sftp, cwd):
-        """ Create a new instance
+        """Create a new instance
 
         :param ssh_client: The paramiko.SSHClient
         :param sftp: The SFTP object

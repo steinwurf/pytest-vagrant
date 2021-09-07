@@ -1,7 +1,5 @@
 import os
 import mock
-import csv
-import re
 import pytest
 
 import pytest_vagrant
@@ -13,7 +11,6 @@ def test_vagrant_fixture(vagrant):
 
 
 def _test_vagrant_from_box(testdirectory):
-
     class FactoryMock(mock.Mock):
         def build(self, box, name):
 
@@ -21,7 +18,7 @@ def _test_vagrant_from_box(testdirectory):
 
             machine.box = box
             machine.name = name
-            machine.slug = 'slug'
+            machine.slug = "slug"
             machine.cwd = os.path.join(testdirectory.path(), name)
 
             machine.status.not_created = True
@@ -35,7 +32,7 @@ def _test_vagrant_from_box(testdirectory):
 
     vagrant = pytest_vagrant.Vagrant(machine_factory=machine_factory)
 
-    machine = vagrant.from_box(box="ubuntu/eoan64", name="pytest_vagrant")
+    machine = vagrant.from_box(box="ubuntu/focal64", name="pytest_vagrant")
 
     print(str(machine.mock_calls))
 
@@ -75,10 +72,10 @@ def test_machine_snapshot_list():
     assert result == []
 
     result = pytest_vagrant.parse.to_snapshot_list(SNAPSHOT_LIST_2_2_7)
-    assert result == ['reset', 'reset2']
+    assert result == ["reset", "reset2"]
 
     result = pytest_vagrant.parse.to_snapshot_list(SNAPSHOT_LIST_2_2_3)
-    assert result == ['reset']
+    assert result == ["reset"]
 
 
 STATUS = r"""
@@ -98,55 +95,58 @@ def test_parse_status():
 
 def test_run(vagrant, testdirectory):
     machine = vagrant.from_box(
-        box="hashicorp/bionic64", name="pytest_vagrant", reset=False)
+        box="hashicorp/bionic64", name="pytest_vagrant", reset=False
+    )
 
     with machine.ssh() as ssh:
         cwd = ssh.getcwd()
-        assert cwd == '/home/vagrant'
+        assert cwd == "/home/vagrant"
 
-        ssh.chdir('/home')
+        ssh.chdir("/home")
         cwd = ssh.getcwd()
-        assert cwd == '/home'
+        assert cwd == "/home"
 
-        ssh.chdir('vagrant')
+        ssh.chdir("vagrant")
         cwd = ssh.getcwd()
-        assert cwd == '/home/vagrant'
+        assert cwd == "/home/vagrant"
 
-        ssh.chdir('~')
+        ssh.chdir("~")
         cwd = ssh.getcwd()
-        assert cwd == '/home/vagrant'
+        assert cwd == "/home/vagrant"
 
-        assert ssh.is_dir('/home/vagrant') == True
-        assert ssh.is_dir('/home') == True
-        assert ssh.is_dir('~') == False
-        assert ssh.is_dir('/blabal/vagrant') == False
+        assert ssh.is_dir("/home/vagrant") == True
+        assert ssh.is_dir("/home") == True
+        assert ssh.is_dir("~") == False
+        assert ssh.is_dir("/blabal/vagrant") == False
 
-        ssh.chdir('/home')
-        assert ssh.is_dir('vagrant') == True
-        ssh.chdir('~')
+        ssh.chdir("/home")
+        assert ssh.is_dir("vagrant") == True
+        ssh.chdir("~")
 
-        assert ssh.is_file('/home/vagrant/.profile') == True
-        assert ssh.is_file('.profile') == True
-        assert ssh.is_file('blabal') == False
+        assert ssh.is_file("/home/vagrant/.profile") == True
+        assert ssh.is_file(".profile") == True
+        assert ssh.is_file("blabal") == False
 
         file_path = testdirectory.write_text(
-            "test.txt", data=u"hello", encoding="utf-8")
+            "test.txt", data=u"hello", encoding="utf-8"
+        )
 
         ssh.put_file(local_file=file_path)
-        assert ssh.is_file('test.txt') == True
+        assert ssh.is_file("test.txt") == True
 
         ssh.run('echo " vagrant" >> test.txt')
 
-        ssh.get_file('test.txt', testdirectory.path(), rename_as='back.txt')
-        assert testdirectory.contains_file('back.txt')
+        ssh.get_file("test.txt", testdirectory.path(), rename_as="back.txt")
+        assert testdirectory.contains_file("back.txt")
 
-        ssh.unlink('test.txt')
-        assert ssh.is_file('test.txt') == False
+        ssh.unlink("test.txt")
+        assert ssh.is_file("test.txt") == False
 
 
 def test_run_fail(vagrant):
     machine = vagrant.from_box(
-        box="hashicorp/bionic64", name="pytest_vagrant", reset=False)
+        box="hashicorp/bionic64", name="pytest_vagrant", reset=False
+    )
 
     with machine.ssh() as ssh:
         with pytest.raises(pytest_vagrant.RunResultError):
@@ -159,10 +159,9 @@ v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
 
 
 def test_run_ubuntu(vagrant):
-    machine = vagrant.from_box(
-        box="ubuntu/eoan64", name="pytest_vagrant", reset=False)
+    machine = vagrant.from_box(box="ubuntu/focal64", name="pytest_vagrant", reset=False)
 
-    vagrantfile = os.path.join(machine.cwd, 'Vagrantfile')
+    vagrantfile = os.path.join(machine.cwd, "Vagrantfile")
 
     # Check that we our Ubuntu Vagrantfile template
     with open(vagrantfile) as f:
@@ -187,7 +186,39 @@ def test_parse_ssh_config():
 
     result = pytest_vagrant.parse.to_ssh_config(output=OUTPUT_SSHCONFIG)
 
-    assert result.hostname == '127.0.0.1'
-    assert result.username == 'vagrant'
+    assert result.hostname == "127.0.0.1"
+    assert result.username == "vagrant"
     assert result.port == 2222
-    assert result.identityfile == '/home/mvp/.pytest_vagrant/private_key'
+    assert result.identityfile == "/home/mvp/.pytest_vagrant/private_key"
+
+
+VERSION_SPECIFICATION = """
+config.vm.box_version = 
+""".strip()
+
+
+def test_box_version(vagrant):
+    unversioned_machine = vagrant.from_box(
+        box="debian/buster64",
+        name="pytest_vagrant",
+        reset=False,
+    )
+
+    unversioned_vagrantfile = os.path.join(unversioned_machine.cwd, "Vagrantfile")
+
+    # Check that version is not in Vagrantfile template
+    with open(unversioned_vagrantfile) as f:
+        assert VERSION_SPECIFICATION not in f.read()
+
+    versioned_machine = vagrant.from_box(
+        box="debian/buster64",
+        name="pytest_vagrant",
+        box_version="10.20210409.1",
+        reset=False,
+    )
+
+    versioned_vagrantfile = os.path.join(versioned_machine.cwd, "Vagrantfile")
+
+    # Check that version is in Vagrantfile template
+    with open(versioned_vagrantfile) as f:
+        assert VERSION_SPECIFICATION in f.read()

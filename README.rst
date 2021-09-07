@@ -2,8 +2,20 @@
 Introduction
 ============
 
-.. image:: https://badge.fury.io/py/pytest-vagrant.svg
+|PyPi| |Waf Python Tests| |Black| |Flake8|
+
+.. |PyPi| image:: https://badge.fury.io/py/pytest-vagrant.svg
     :target: https://badge.fury.io/py/pytest-vagrant
+
+.. |Waf Python Tests| image:: https://github.com/steinwurf/pytest-vagrant/actions/workflows/python-waf.yml/badge.svg
+   :target: https://github.com/steinwurf/pytest-vagrant/actions/workflows/python-waf.yml
+
+.. |Flake8| image:: https://github.com/steinwurf/pytest-vagrant/actions/workflows/flake.yml/badge.svg
+    :target: https://github.com/steinwurf/pytest-vagrant/actions/workflows/flake.yml
+
+.. |Black| image:: https://github.com/steinwurf/pytest-vagrant/actions/workflows/black.yml/badge.svg
+      :target: https://github.com/steinwurf/pytest-vagrant/actions/workflows/black.yml
+
 
 pytest-vagrant provides a py.test fixture for working with vagrant
 in pytest.

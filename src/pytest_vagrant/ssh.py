@@ -1,4 +1,3 @@
-
 import re
 import os
 import stat
@@ -10,8 +9,7 @@ from . import errors
 
 
 class SSH(object):
-    """An SSH Connection
-    """
+    """An SSH Connection"""
 
     def __init__(self, ssh_config):
         self.ssh_config = ssh_config
@@ -28,7 +26,8 @@ class SSH(object):
             hostname=self.ssh_config.hostname,
             port=self.ssh_config.port,
             username=self.ssh_config.username,
-            key_filename=self.ssh_config.identityfile)
+            key_filename=self.ssh_config.identityfile,
+        )
 
         sftp = ssh_client.open_sftp()
 
@@ -37,7 +36,8 @@ class SSH(object):
         cwd = stdout.readline().strip()
 
         self.connection = ssh_connection.SSHConnection(
-            ssh_client=ssh_client, sftp=sftp, cwd=cwd)
+            ssh_client=ssh_client, sftp=sftp, cwd=cwd
+        )
 
     def close(self):
         """Close the SSH connection."""
@@ -47,7 +47,7 @@ class SSH(object):
         self.connection = None
 
     def getcwd(self):
-        """ Return the current working directory (cwd).
+        """Return the current working directory (cwd).
 
         All commands will be relative to this location.
 
@@ -64,16 +64,19 @@ class SSH(object):
         # Make sure we are in the right directory
         command = "cd " + cwd + ";" + command
 
-        _, stdout, stderr = self.connection.ssh_client.exec_command(
-            command)
+        _, stdout, stderr = self.connection.ssh_client.exec_command(command)
 
         return_code = stdout.channel.recv_exit_status()
-        stdout = ''.join(stdout.readlines())
-        stderr = ''.join(stderr.readlines())
+        stdout = "".join(stdout.readlines())
+        stderr = "".join(stderr.readlines())
 
         result = runresult.RunResult(
-            command=command, cwd=cwd,
-            stdout=stdout, stderr=stderr, returncode=return_code)
+            command=command,
+            cwd=cwd,
+            stdout=stdout,
+            stderr=stderr,
+            returncode=return_code,
+        )
 
         if result.returncode:
             raise errors.RunResultError(runresult=result)
@@ -81,16 +84,14 @@ class SSH(object):
         return result
 
     def chdir(self, path):
-        """Change current working directory """
+        """Change current working directory"""
 
         path = self._resolve_path(path)
 
-        self.connection.cwd = self.run(
-            command='pwd', cwd=path).stdout.strip()
+        self.connection.cwd = self.run(command="pwd", cwd=path).stdout.strip()
 
     def put_file(self, local_file, rename_as=""):
-        """Transfer files from this machine to the remote.
-        """
+        """Transfer files from this machine to the remote."""
         if not os.path.isfile(local_file):
             raise RuntimeError("Not a valid file {}".format(local_file))
 
@@ -100,18 +101,17 @@ class SSH(object):
             filename = os.path.basename(local_file)
             remote_file = os.path.join(self.connection.cwd, filename)
 
-        self.connection.sftp.put(localpath=local_file, remotepath=remote_file,
-                                 confirm=True)
+        self.connection.sftp.put(
+            localpath=local_file, remotepath=remote_file, confirm=True
+        )
 
         statinfo = os.stat(local_file)
         self.connection.sftp.chmod(path=remote_file, mode=statinfo.st_mode)
 
     def get_file(self, remote_file, local_directory, rename_as=""):
-        """Transfer files from the remote to this machine.
-        """
+        """Transfer files from the remote to this machine."""
         if not os.path.isdir(local_directory):
-            raise RuntimeError(
-                "Not a valid directory {}".format(local_directory))
+            raise RuntimeError("Not a valid directory {}".format(local_directory))
 
         remote_file = self._resolve_path(remote_file)
 
@@ -127,7 +127,7 @@ class SSH(object):
         os.chmod(local_file, statinfo.st_mode)
 
     def is_dir(self, path):
-        """ Return true if path is a directory """
+        """Return true if path is a directory"""
 
         # The path is can be absolute or relative to the current
         # working directory
@@ -141,7 +141,7 @@ class SSH(object):
         return stat.S_ISDIR(mode)
 
     def is_file(self, path):
-        """ Return true if path is a file """
+        """Return true if path is a file"""
 
         path = self._resolve_path(path)
 
@@ -153,14 +153,14 @@ class SSH(object):
         return stat.S_ISREG(mode)
 
     def unlink(self, path):
-        """ Removes a file or sybolic link """
+        """Removes a file or sybolic link"""
         path = self._resolve_path(path)
-        self.run(command='rm {}'.format(path))
+        self.run(command="rm {}".format(path))
 
     def _resolve_path(self, path):
         # The path is can be absolute or relative to the current
         # working directory
-        if path[0] == '/' or path[0] == '~':
+        if path[0] == "/" or path[0] == "~":
             return path
         else:
             return os.path.join(self.connection.cwd, path)

@@ -1,8 +1,8 @@
 class SSHConfig(object):
-    """ A SSH configuration """
+    """A SSH configuration"""
 
     def __init__(self, hostname, username, port, identityfile):
-        """ Create a new object
+        """Create a new object
 
         :param hostname: The hostname of the SSH server
         :param username: The username to use for login

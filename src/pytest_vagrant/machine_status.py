@@ -1,4 +1,3 @@
-
 class MachineStatus(object):
     """Wraps the vagrant status.
 
@@ -9,17 +8,17 @@ class MachineStatus(object):
     of vagrant.
     """
 
-    RUNNING = 'running'  # vagrant up
-    NOT_CREATED = 'not_created'  # vagrant destroy
-    POWEROFF = 'poweroff'  # vagrant halt
-    ABORTED = 'aborted'  # The VM is in an aborted state
-    SAVED = 'saved'  # vagrant suspend
-    STOPPED = 'stopped'  # LXC status
-    FROZEN = 'frozen'  # LXC status
-    SHUTOFF = 'shutoff'  # libvirt
+    RUNNING = "running"  # vagrant up
+    NOT_CREATED = "not_created"  # vagrant destroy
+    POWEROFF = "poweroff"  # vagrant halt
+    ABORTED = "aborted"  # The VM is in an aborted state
+    SAVED = "saved"  # vagrant suspend
+    STOPPED = "stopped"  # LXC status
+    FROZEN = "frozen"  # LXC status
+    SHUTOFF = "shutoff"  # libvirt
 
     def __init__(self, status):
-        """ Create a new instance.
+        """Create a new instance.
 
         :param status: The status as a string
         """
