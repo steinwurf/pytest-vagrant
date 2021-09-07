@@ -1,5 +1,6 @@
 class ParseFormat(object):
-    """ Format of the machine readable output returned by Vagrant"""
+    """Format of the machine readable output returned by Vagrant"""
+
     TIMESTAMP = 0
     TARGET = 1
     TYPE = 2

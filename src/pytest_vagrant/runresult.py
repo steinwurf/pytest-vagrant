@@ -1,11 +1,10 @@
-
 import fnmatch
 
 from pytest_vagrant.errors import MatchError
 
 
 class RunResult(object):
-    """ Stores the results from running a command
+    """Stores the results from running a command
     Attributes:
     :command: The command that was executed
     :cwd: Current working directory i.e. path where the command was executed
@@ -15,8 +14,7 @@ class RunResult(object):
     """
 
     def __init__(self, command, cwd, stdout, stderr, returncode):
-        """ Create a new RunResult object
-        """
+        """Create a new RunResult object"""
 
         self.command = command
         self.cwd = cwd
@@ -25,7 +23,7 @@ class RunResult(object):
         self.returncode = returncode
 
     def match(self, stdout=None, stderr=None):
-        """ Matches the lines in the output with the pattern. The match
+        """Matches the lines in the output with the pattern. The match
         pattern can contain basic wildcards, see
         https://docs.python.org/2/library/fnmatch.html
         For convenience:
@@ -59,15 +57,20 @@ class RunResult(object):
             raise MatchError(match=match, output=output)
 
     def __str__(self):
-        """ Print the RunResult object as a string
-        """
-        run_string = "RunResult\n" \
-                     "command: {command}\n" \
-                     "cwd: {cwd}\n" \
-                     "returncode: {returncode}\n" \
-                     "stdout: \n{stdout}" \
-                     "stderr: \n{stderr}"
+        """Print the RunResult object as a string"""
+        run_string = (
+            "RunResult\n"
+            "command: {command}\n"
+            "cwd: {cwd}\n"
+            "returncode: {returncode}\n"
+            "stdout: \n{stdout}"
+            "stderr: \n{stderr}"
+        )
 
-        return run_string.format(command=self.command, cwd=self.cwd,
-                                 returncode=self.returncode,
-                                 stdout=self.stdout, stderr=self.stderr)
+        return run_string.format(
+            command=self.command,
+            cwd=self.cwd,
+            returncode=self.returncode,
+            stdout=self.stdout,
+            stderr=self.stderr,
+        )

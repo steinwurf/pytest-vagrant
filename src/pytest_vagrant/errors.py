@@ -1,5 +1,5 @@
 class RunResultError(Exception):
-    """ Exception thrown when running a command fails"""
+    """Exception thrown when running a command fails"""
 
     def __init__(self, runresult):
         super(RunResultError, self).__init__(str(runresult))

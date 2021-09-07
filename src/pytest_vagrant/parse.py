@@ -7,11 +7,11 @@ from . import ssh_config
 
 
 def to_status(output):
-    """ Parse the output of 'vagrant status --machine-readable' """
+    """Parse the output of 'vagrant status --machine-readable'"""
 
     for row in csv.reader(output.splitlines()):
 
-        if row[parse_format.ParseFormat.TYPE] != 'state':
+        if row[parse_format.ParseFormat.TYPE] != "state":
             continue
 
         status = row[parse_format.ParseFormat.DATA]
@@ -21,7 +21,7 @@ def to_status(output):
 
 
 def to_snapshot_list(output):
-    """ Parse the output of 'vagrant snapshot list --machine-readable' """
+    """Parse the output of 'vagrant snapshot list --machine-readable'"""
     snapshots = []
 
     for row in csv.reader(output.splitlines()):
@@ -40,13 +40,13 @@ def to_snapshot_list(output):
 
 
 def to_ssh_config(output):
-    """ Parse the output of 'vagrant ssh-config' """
+    """Parse the output of 'vagrant ssh-config'"""
 
-    hostname = re.search(r'HostName (.*)', output).group(1)
-    username = re.search(r'User (.*)', output).group(1)
-    port = int(re.search(r'Port (.*)', output).group(1))
-    identityfile = re.search(r'IdentityFile (.*)', output).group(1)
+    hostname = re.search(r"HostName (.*)", output).group(1)
+    username = re.search(r"User (.*)", output).group(1)
+    port = int(re.search(r"Port (.*)", output).group(1))
+    identityfile = re.search(r"IdentityFile (.*)", output).group(1)
 
     return ssh_config.SSHConfig(
-        hostname=hostname, username=username, port=port,
-        identityfile=identityfile)
+        hostname=hostname, username=username, port=port, identityfile=identityfile
+    )
