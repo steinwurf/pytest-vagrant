@@ -213,7 +213,7 @@ def test_box_version(vagrant):
     versioned_machine = vagrant.from_box(
         box="debian/buster64",
         name="pytest_vagrant",
-        box_version="10.20211018.1",
+        box_version="10.20210409.1",
         reset=False,
     )
 
