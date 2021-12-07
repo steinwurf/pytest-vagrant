@@ -6,14 +6,5 @@ on:
   push:
   pull_request:
 jobs:
-  black:
-    name: Black Format
-    runs-on: [self-hosted, docker]
-    container:
-      image: kiwicom/black
-      options: --user 0:0
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v2
-      - name: Run Black Check
-        run: black . --check
+  Black:
+    uses: steinwurf/black-action/.github/workflows/action.yml@1.0.0
