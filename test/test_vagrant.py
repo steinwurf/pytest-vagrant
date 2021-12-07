@@ -193,7 +193,7 @@ def test_parse_ssh_config():
 
 
 VERSION_SPECIFICATION = """
-config.vm.box_version = 
+config.vm.box_version =
 """.strip()
 
 
@@ -213,7 +213,7 @@ def test_box_version(vagrant):
     versioned_machine = vagrant.from_box(
         box="debian/buster64",
         name="pytest_vagrant",
-        box_version="10.20210409.1",
+        box_version="10.20211018.1",
         reset=False,
     )
 
