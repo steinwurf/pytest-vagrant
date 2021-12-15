@@ -2,7 +2,7 @@
 Introduction
 ============
 
-|PyPi| |Waf Python Tests| |Black| |Flake8|
+|PyPi| |Waf Python Tests| |Black| |Flake8| |Pip Install|
 
 .. |PyPi| image:: https://badge.fury.io/py/pytest-vagrant.svg
     :target: https://badge.fury.io/py/pytest-vagrant
@@ -15,6 +15,9 @@ Introduction
 
 .. |Black| image:: https://github.com/steinwurf/pytest-vagrant/actions/workflows/black.yml/badge.svg
       :target: https://github.com/steinwurf/pytest-vagrant/actions/workflows/black.yml
+
+.. |Pip Install| image:: https://github.com/steinwurf/pytest-vagrant/actions/workflows/pip.yml/badge.svg
+      :target: https://github.com/steinwurf/pytest-vagrant/actions/workflows/pip.yml
 
 
 pytest-vagrant provides a py.test fixture for working with vagrant
