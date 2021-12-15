@@ -4,6 +4,18 @@ import pytest
 
 import pytest_vagrant
 
+# Note: These tests sometimes fail if the boxes have become inaccessible
+# (check 'VBoxManage list vms' output, if you are running these tests as root
+# (e.g for CI) remember to 'su' before checking.)
+#
+# One possible workaround is to destroy all boxes for a 'clean reset', Keep in
+# mind before use, that this destroy ALL boxes, not only those related to this
+# test. The command for doing so in bash is
+# VBoxManage list vms | awk '{print $2;}' | xargs -I vmid VBoxManage unregistervm --delete vmid
+#
+# If you only want to destroy a specific box, you can use the following command:
+# VBoxManage unregistervm --delete <box_name or uid>
+
 
 def test_vagrant_fixture(vagrant):
     # We don't do anything just check that the fixture is available
@@ -213,7 +225,7 @@ def test_box_version(vagrant):
     versioned_machine = vagrant.from_box(
         box="debian/buster64",
         name="pytest_vagrant",
-        box_version="10.20210409.1",
+        box_version="10.20210829.1",
         reset=False,
     )
 
