@@ -20,4 +20,4 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v2
       - name: Install package
-        run: echo 'pwd' >> pip install
+        run: pip install .
