@@ -1,11 +1,5 @@
 import os
 
-from . import machine_status
-from . import parse_format
-from . import parse
-from . import machine
-
-
 # Vagrant uses the Vagrantfile as configuration file. You can read more
 # about it here:
 # https://www.vagrantup.com/docs/vagrantfile/

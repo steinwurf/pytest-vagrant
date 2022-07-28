@@ -139,9 +139,7 @@ def test_run(vagrant, testdirectory):
         assert ssh.is_file(".profile") == True
         assert ssh.is_file("blabal") == False
 
-        file_path = testdirectory.write_text(
-            "test.txt", data=u"hello", encoding="utf-8"
-        )
+        file_path = testdirectory.write_text("test.txt", data="hello", encoding="utf-8")
 
         ssh.put_file(local_file=file_path)
         assert ssh.is_file("test.txt") == True
@@ -174,7 +172,6 @@ def test_run_ubuntu(vagrant):
     machine = vagrant.from_box(box="ubuntu/focal64", name="pytest_vagrant", reset=False)
 
     vagrantfile = os.path.join(machine.cwd, "Vagrantfile")
-
     # Check that we our Ubuntu Vagrantfile template
     with open(vagrantfile) as f:
         assert UBUNTU_TWEAK in f.read()
