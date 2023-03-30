@@ -53,7 +53,7 @@ vagrant environment on the machine running the test code.
 
 
 Release new version
-==================
+===================
 
 1. Edit NEWS.rst and wscript (set correct VERSION)
 2. Run ::
