@@ -4,7 +4,7 @@ import pytest_vagrant
 
 @pytest.fixture(scope="session")
 def vagrant(request):
-    """Creates the py.test fixture to make it usable withing the unit
+    """Creates the py.test fixture to make it usable within the unit
     tests. See the Vagrant class for more information.
     """
 

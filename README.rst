@@ -52,7 +52,7 @@ The ``vagrant`` argument is an instance of Vagrant and represents the
 vagrant environment on the machine running the test code.
 
 
-Relase new version
+Release new version
 ==================
 
 1. Edit NEWS.rst and wscript (set correct VERSION)
