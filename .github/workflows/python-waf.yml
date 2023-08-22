@@ -1,24 +1,25 @@
-name: Waf Python Tests
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 1 * * *" # 3 AM CET
-  push:
-  pull_request:
 jobs:
   waf:
-    runs-on: [self-hosted, Linux, vagrant]
     name: Linux Waf
+    runs-on:
+    - self-hosted
+    - Linux
+    - vagrant
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Configure
-        run: python3 waf configure
-      - name: Build
-        run: python3 waf
-      - name: Test
-        run: python3 waf --run_tests
-
-
-
-
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Configure
+      run: python3 waf configure
+    - name: Build
+      run: python3 waf
+    - name: Test
+      run: python3 waf --run_tests
+name: Waf Python Tests
+'on':
+  pull_request: null
+  push:
+    branches:
+    - master
+  schedule:
+  - cron: 0 1 * * *
+  workflow_dispatch: null
